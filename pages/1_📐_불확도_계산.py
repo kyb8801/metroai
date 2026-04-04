@@ -439,187 +439,528 @@ elif mode == "✏️ 직접 입력":
 # 위자드 모드
 # ──────────────────────────────────────────
 elif mode == "🧙 위자드 모드":
-    st.subheader("🧙 위자드 모드 — 단계별 불확도 입력")
-    st.markdown("GUM을 몰라도 괜찮아요! 질문에 답하면 불확도 예산표가 자동으로 만들어집니다.")
+    st.subheader("🧙 위자드 모드 — 스마트 위자드로 불확도 예산표 만들기")
+    st.markdown("측정 분야를 선택하면 표준 불확도 성분들이 자동으로 제시됩니다. 필요한 항목을 선택하고 값을 입력하기만 하면 됩니다!")
 
     # 세션 상태 초기화
-    if "wizard_step" not in st.session_state:
-        st.session_state.wizard_step = 1
+    if "wizard_target" not in st.session_state:
+        st.session_state.wizard_target = "길이 (블록게이지)"
     if "wizard_sources" not in st.session_state:
         st.session_state.wizard_sources = []
-    if "wizard_model_expr" not in st.session_state:
-        st.session_state.wizard_model_expr = ""
     if "wizard_symbol_names" not in st.session_state:
         st.session_state.wizard_symbol_names = []
-    if "wizard_measurand" not in st.session_state:
-        st.session_state.wizard_measurand = {"name": "Y", "unit": ""}
+    if "wizard_enabled_components" not in st.session_state:
+        st.session_state.wizard_enabled_components = {}
 
-    # ─── Step 1: 측정 대상 선택 ───
-    st.markdown("### Step 1: 측정 대상 선택")
-    target = st.selectbox(
-        "무엇을 교정/시험하나요?",
-        ["길이 (블록게이지)", "질량 (분동)", "온도 (온도계)", "압력 (압력계)", "직접 입력"],
-        key="wizard_target",
-    )
-
-    if target == "직접 입력":
-        st.session_state.wizard_model_expr = st.text_input(
-            "측정 모델 수식", value="a + b", key="wizard_custom_expr",
+    # ─── Step 1: 측정 분야 선택 ───
+    with st.expander("📏 Step 1: 측정 분야 선택", expanded=True):
+        target = st.selectbox(
+            "측정 분야 선택",
+            ["길이 (블록게이지)", "질량 (분동)", "온도 (온도계)", "압력 (압력계)", "직접 입력"],
+            key="wizard_target_select",
         )
-        st.session_state.wizard_measurand = {
-            "name": st.text_input("측정량 기호", value="Y", key="wizard_meas_name"),
-            "unit": st.text_input("단위", value="", key="wizard_meas_unit"),
-        }
-    else:
-        target_configs = {
-            "길이 (블록게이지)": ("dL + d_std + alpha_diff * Ls_mm * 1000 * dT", "L", "μm"),
-            "질량 (분동)": ("dm_d + d_std + dm_b + dm_a", "m", "mg"),
-            "온도 (온도계)": ("dT_ind + d_std + dT_stab + dT_uni + dT_res", "T", "°C"),
-            "압력 (압력계)": ("dP_ind + d_std + dP_res + dP_hyst + dP_zero", "P", "MPa"),
-        }
-        expr, meas_name, meas_unit = target_configs[target]
-        st.session_state.wizard_model_expr = expr
-        st.session_state.wizard_measurand = {"name": meas_name, "unit": meas_unit}
-        st.info(f"측정 모델: `{expr}`")
+        st.session_state.wizard_target = target
 
-    st.divider()
-
-    # ─── Step 2: 불확도 성분 수집 ───
-    st.markdown("### Step 2: 불확도 성분 추가")
-
-    with st.form("wizard_add_source", clear_on_submit=True):
-        st.markdown("**새 불확도 성분 추가**")
-
-        src_name = st.text_input("성분 이름 (예: 비교기 반복 측정)", key="wiz_src_name")
-        src_symbol = st.text_input("수식에서 사용할 기호 (예: dL)", key="wiz_src_sym")
-
-        how_known = st.selectbox(
-            "이 값의 불확도를 어떻게 알았나요?",
-            [
-                "같은 측정을 여러번 반복했어요 (A형)",
-                "교정성적서에 적혀 있어요 (B형-정규분포)",
-                "사양서/규격서에 ±값이 있어요 (B형-균일분포)",
-                "경험적으로 범위를 알아요 (B형-삼각분포)",
+    # ─── 표준 템플릿 정의 ───
+    # 각 템플릿은 (측정량_이름, 단위, [(컴포넌트_순서, 이름, 기호, 평가유형, 분포, 설명, 기본값)])
+    templates = {
+        "길이 (블록게이지)": {
+            "measurand_name": "L",
+            "measurand_unit": "μm",
+            "measurement_model_expr": "dL + d_std + alpha_diff * Ls_mm * 1000 * dT",
+            "components": [
+                {
+                    "order": 1,
+                    "name": "비교기 반복 측정",
+                    "symbol": "dL",
+                    "eval_type": "A",
+                    "description": "비교기로 여러 번 측정한 편차",
+                    "input_type": "repeat_data",
+                    "default_repeat": "0.10, 0.12, 0.08, 0.11, 0.09",
+                },
+                {
+                    "order": 2,
+                    "name": "표준기 교정 불확도",
+                    "symbol": "d_std",
+                    "eval_type": "B",
+                    "distribution": DistributionType.NORMAL,
+                    "description": "표준 블록게이지 교정성적서에서",
+                    "input_type": "cert_uncertainty",
+                    "default_U": 0.05,
+                    "default_k": 2.0,
+                },
+                {
+                    "order": 3,
+                    "name": "열팽창계수 차이",
+                    "symbol": "alpha_diff",
+                    "eval_type": "B",
+                    "distribution": DistributionType.RECTANGULAR,
+                    "description": "표준기와 시험편의 열팽창계수 차이",
+                    "input_type": "half_width",
+                    "default_a": 1.0e-6,
+                },
+                {
+                    "order": 4,
+                    "name": "온도 불확도",
+                    "symbol": "dT",
+                    "eval_type": "B",
+                    "distribution": DistributionType.RECTANGULAR,
+                    "description": "환경 온도 불확도 반폭",
+                    "input_type": "half_width",
+                    "default_a": 0.5,
+                },
+                {
+                    "order": 5,
+                    "name": "비교기 분해능",
+                    "symbol": "d_res",
+                    "eval_type": "B",
+                    "distribution": DistributionType.RECTANGULAR,
+                    "description": "비교기의 측정 분해능",
+                    "input_type": "resolution",
+                    "default_res": 0.01,
+                },
             ],
-            key="wiz_how_known",
-        )
+        },
+        "질량 (분동)": {
+            "measurand_name": "m",
+            "measurand_unit": "mg",
+            "measurement_model_expr": "dm_d + d_std + dm_b + dm_a",
+            "components": [
+                {
+                    "order": 1,
+                    "name": "저울 반복 측정",
+                    "symbol": "dm_d",
+                    "eval_type": "A",
+                    "description": "저울로 여러 번 측정한 편차",
+                    "input_type": "repeat_data",
+                    "default_repeat": "0.010, 0.012, 0.008, 0.011, 0.009",
+                },
+                {
+                    "order": 2,
+                    "name": "표준분동 교정 불확도",
+                    "symbol": "d_std",
+                    "eval_type": "B",
+                    "distribution": DistributionType.NORMAL,
+                    "description": "표준분동 교정성적서에서",
+                    "input_type": "cert_uncertainty",
+                    "default_U": 0.05,
+                    "default_k": 2.0,
+                },
+                {
+                    "order": 3,
+                    "name": "부력 보정",
+                    "symbol": "dm_b",
+                    "eval_type": "B",
+                    "distribution": DistributionType.RECTANGULAR,
+                    "description": "공기 부력으로 인한 불확도",
+                    "input_type": "half_width",
+                    "default_a": 0.001,
+                },
+                {
+                    "order": 4,
+                    "name": "저울 분해능",
+                    "symbol": "dm_a",
+                    "eval_type": "B",
+                    "distribution": DistributionType.RECTANGULAR,
+                    "description": "저울의 측정 분해능",
+                    "input_type": "resolution",
+                    "default_res": 0.001,
+                },
+            ],
+        },
+        "온도 (온도계)": {
+            "measurand_name": "T",
+            "measurand_unit": "°C",
+            "measurement_model_expr": "dT_ind + d_std + dT_stab + dT_uni + dT_res",
+            "components": [
+                {
+                    "order": 1,
+                    "name": "반복 측정",
+                    "symbol": "dT_ind",
+                    "eval_type": "A",
+                    "description": "온도계로 여러 번 측정한 편차",
+                    "input_type": "repeat_data",
+                    "default_repeat": "0.01, 0.02, -0.01, 0.00, 0.01",
+                },
+                {
+                    "order": 2,
+                    "name": "표준온도계 교정 불확도",
+                    "symbol": "d_std",
+                    "eval_type": "B",
+                    "distribution": DistributionType.NORMAL,
+                    "description": "표준온도계 교정성적서에서",
+                    "input_type": "cert_uncertainty",
+                    "default_U": 0.02,
+                    "default_k": 2.0,
+                },
+                {
+                    "order": 3,
+                    "name": "항온조 안정도",
+                    "symbol": "dT_stab",
+                    "eval_type": "B",
+                    "distribution": DistributionType.RECTANGULAR,
+                    "description": "항온조의 온도 안정도",
+                    "input_type": "half_width",
+                    "default_a": 0.02,
+                },
+                {
+                    "order": 4,
+                    "name": "항온조 균일도",
+                    "symbol": "dT_uni",
+                    "eval_type": "B",
+                    "distribution": DistributionType.RECTANGULAR,
+                    "description": "항온조 내 온도 분포의 균일도",
+                    "input_type": "half_width",
+                    "default_a": 0.05,
+                },
+                {
+                    "order": 5,
+                    "name": "분해능",
+                    "symbol": "dT_res",
+                    "eval_type": "B",
+                    "distribution": DistributionType.RECTANGULAR,
+                    "description": "온도계의 측정 분해능",
+                    "input_type": "resolution",
+                    "default_res": 0.01,
+                },
+            ],
+        },
+        "압력 (압력계)": {
+            "measurand_name": "P",
+            "measurand_unit": "MPa",
+            "measurement_model_expr": "dP_ind + d_std + dP_res + dP_hyst + dP_zero",
+            "components": [
+                {
+                    "order": 1,
+                    "name": "반복 측정",
+                    "symbol": "dP_ind",
+                    "eval_type": "A",
+                    "description": "압력계로 여러 번 측정한 편차",
+                    "input_type": "repeat_data",
+                    "default_repeat": "0.001, 0.002, -0.001, 0.000, 0.001",
+                },
+                {
+                    "order": 2,
+                    "name": "표준기 교정 불확도",
+                    "symbol": "d_std",
+                    "eval_type": "B",
+                    "distribution": DistributionType.NORMAL,
+                    "description": "표준기 교정성적서에서",
+                    "input_type": "cert_uncertainty",
+                    "default_U": 0.002,
+                    "default_k": 2.0,
+                },
+                {
+                    "order": 3,
+                    "name": "분해능",
+                    "symbol": "dP_res",
+                    "eval_type": "B",
+                    "distribution": DistributionType.RECTANGULAR,
+                    "description": "압력계의 측정 분해능",
+                    "input_type": "resolution",
+                    "default_res": 0.001,
+                },
+                {
+                    "order": 4,
+                    "name": "이력차",
+                    "symbol": "dP_hyst",
+                    "eval_type": "B",
+                    "distribution": DistributionType.RECTANGULAR,
+                    "description": "압력 상승/하강 시 히스테리시스",
+                    "input_type": "half_width",
+                    "default_a": 0.002,
+                },
+                {
+                    "order": 5,
+                    "name": "영점 드리프트",
+                    "symbol": "dP_zero",
+                    "eval_type": "B",
+                    "distribution": DistributionType.RECTANGULAR,
+                    "description": "장시간 운영 중 영점 변화",
+                    "input_type": "half_width",
+                    "default_a": 0.001,
+                },
+            ],
+        },
+    }
 
-        if "반복" in how_known:
-            data_str = st.text_input(
-                "측정값을 쉼표로 입력해주세요",
-                value="", key="wiz_data",
-                help="예: 0.10, 0.12, 0.08, 0.11, 0.09",
-            )
-        elif "교정성적서" in how_known:
-            wiz_U = st.number_input("교정성적서의 확장불확도(U) 값은?", value=0.05, format="%.4e", key="wiz_U")
-            wiz_k = st.number_input("포함인자(k) 값은? (보통 2입니다)", value=2.0, key="wiz_k")
-        elif "사양서" in how_known:
-            wiz_a = st.number_input("±값(반폭)은 얼마인가요?", value=0.01, format="%.4e", key="wiz_a")
-        else:
-            wiz_a_tri = st.number_input("범위(반폭)는 얼마인가요?", value=0.01, format="%.4e", key="wiz_a_tri")
+    # ─── Step 2: 불확도 성분 선택 및 입력 ───
+    if target != "직접 입력":
+        template = templates[target]
+        st.session_state.wizard_measurand_name = template["measurand_name"]
+        st.session_state.wizard_measurand_unit = template["measurand_unit"]
 
-        submitted = st.form_submit_button("성분 추가", type="primary")
+        st.divider()
+        with st.expander("⚙️ Step 2: 불확도 성분 설정", expanded=True):
+            st.markdown(f"**측정 모델:** `{template['measurand_name']} = {template['measurement_model_expr']}`")
+            st.markdown("**아래 불확도 성분들 중 필요한 항목을 선택하고 값을 입력하세요:**")
 
-        if submitted and src_name and src_symbol:
-            if "반복" in how_known:
-                try:
-                    data_vals = [float(x.strip()) for x in data_str.split(",") if x.strip()]
-                except ValueError:
-                    data_vals = []
-                if len(data_vals) >= 2:
-                    src = UncertaintySource(
-                        name=src_name, symbol=src_symbol, eval_type="A",
-                        repeat_data=data_vals,
-                    )
-                    st.session_state.wizard_sources.append(src)
-                    st.session_state.wizard_symbol_names.append(src_symbol)
-                    st.success(f"✅ '{src_name}' 추가 완료 (A형 평가, 평균의 표준불확도 자동 계산)")
-                else:
-                    st.error("최소 2개 이상의 데이터가 필요합니다.")
-            elif "교정성적서" in how_known:
-                src = UncertaintySource(
-                    name=src_name, symbol=src_symbol, eval_type="B",
-                    value=0.0, distribution=DistributionType.NORMAL,
-                    expanded_uncertainty_input=wiz_U, coverage_factor_input=wiz_k,
-                )
-                st.session_state.wizard_sources.append(src)
-                st.session_state.wizard_symbol_names.append(src_symbol)
-                st.success(f"✅ '{src_name}' 추가 완료 (B형 평가, 정규분포, u = {wiz_U}/{wiz_k} = {wiz_U/wiz_k:.4e})")
-            elif "사양서" in how_known:
-                src = UncertaintySource(
-                    name=src_name, symbol=src_symbol, eval_type="B",
-                    value=0.0, distribution=DistributionType.RECTANGULAR,
-                    half_width=wiz_a,
-                )
-                st.session_state.wizard_sources.append(src)
-                st.session_state.wizard_symbol_names.append(src_symbol)
-                st.success(f"✅ '{src_name}' 추가 완료 (B형 평가, 균일분포, u = {wiz_a}/√3 = {wiz_a / 1.732:.4e})")
-            else:
-                src = UncertaintySource(
-                    name=src_name, symbol=src_symbol, eval_type="B",
-                    value=0.0, distribution=DistributionType.TRIANGULAR,
-                    half_width=wiz_a_tri,
-                )
-                st.session_state.wizard_sources.append(src)
-                st.session_state.wizard_symbol_names.append(src_symbol)
-                st.success(f"✅ '{src_name}' 추가 완료 (B형 평가, 삼각분포, u = {wiz_a_tri}/√6 = {wiz_a_tri / 2.449:.4e})")
-
-    # 현재 추가된 성분 목록
-    if st.session_state.wizard_sources:
-        st.markdown("**추가된 성분 목록:**")
-        for i, src in enumerate(st.session_state.wizard_sources):
-            u_val, _ = src.compute()
-            eval_desc = "A형" if src.eval_type == "A" else f"B형-{src.distribution.value}"
-            st.markdown(f"  {i+1}. **{src.name}** ({src.symbol}) — {eval_desc}, u = {u_val:.4e}")
-
-        if st.button("🗑️ 전체 초기화"):
             st.session_state.wizard_sources = []
             st.session_state.wizard_symbol_names = []
-            st.rerun()
+
+            for comp_spec in template["components"]:
+                symbol = comp_spec["symbol"]
+                name = comp_spec["name"]
+                init_key = f"wizard_enabled_{symbol}"
+
+                # 체크박스로 포함 여부 선택
+                col_cb, col_desc = st.columns([0.15, 0.85])
+                with col_cb:
+                    enabled = st.checkbox(
+                        "포함",
+                        value=st.session_state.wizard_enabled_components.get(symbol, True),
+                        key=init_key,
+                        label_visibility="collapsed",
+                    )
+                    st.session_state.wizard_enabled_components[symbol] = enabled
+
+                with col_desc:
+                    st.markdown(f"**{name}** (`{symbol}`) — {comp_spec['description']}")
+
+                if enabled:
+                    # 평가 유형 및 입력 필드 표시
+                    input_type = comp_spec.get("input_type", "half_width")
+
+                    col_input = st.columns([0.05, 0.95])[1]  # 들여쓰기 효과
+
+                    with col_input:
+                        if input_type == "repeat_data":
+                            # A형 평가: 반복 데이터
+                            data_str = st.text_input(
+                                f"{name} — 측정값 입력 (쉼표 구분)",
+                                value=comp_spec.get("default_repeat", ""),
+                                key=f"wiz_data_{symbol}",
+                                help="예: 0.10, 0.12, 0.08, 0.11, 0.09",
+                            )
+                            try:
+                                data_vals = [float(x.strip()) for x in data_str.split(",") if x.strip()]
+                                if len(data_vals) >= 2:
+                                    src = UncertaintySource(
+                                        name=name, symbol=symbol, eval_type="A",
+                                        repeat_data=data_vals,
+                                    )
+                                    st.session_state.wizard_sources.append(src)
+                                    st.session_state.wizard_symbol_names.append(symbol)
+                                    st.caption(f"✅ {len(data_vals)}개 데이터 인식됨")
+                                else:
+                                    st.warning("최소 2개 이상의 데이터가 필요합니다.")
+                            except ValueError:
+                                st.warning("숫자를 쉼표로 구분하여 입력하세요.")
+
+                        elif input_type == "cert_uncertainty":
+                            # B형 평가 (정규분포): 교정성적서 값
+                            c1, c2 = st.columns(2)
+                            with c1:
+                                U_val = st.number_input(
+                                    f"{name} — 확장불확도 U",
+                                    value=comp_spec.get("default_U", 0.05),
+                                    format="%.4e",
+                                    key=f"wiz_cert_U_{symbol}",
+                                )
+                            with c2:
+                                k_val = st.number_input(
+                                    f"포함인자 k",
+                                    value=comp_spec.get("default_k", 2.0),
+                                    format="%.2f",
+                                    key=f"wiz_cert_k_{symbol}",
+                                )
+                            src = UncertaintySource(
+                                name=name, symbol=symbol, eval_type="B",
+                                value=0.0, distribution=DistributionType.NORMAL,
+                                expanded_uncertainty_input=U_val, coverage_factor_input=k_val,
+                            )
+                            st.session_state.wizard_sources.append(src)
+                            st.session_state.wizard_symbol_names.append(symbol)
+                            u_calc = U_val / k_val
+                            st.caption(f"✅ 표준불확도 u = {U_val}/{k_val} = {u_calc:.4e}")
+
+                        elif input_type == "half_width":
+                            # B형 평가 (균일분포): 반폭
+                            a_val = st.number_input(
+                                f"{name} — ±값 (반폭)",
+                                value=comp_spec.get("default_a", 0.01),
+                                format="%.4e",
+                                key=f"wiz_hw_{symbol}",
+                            )
+                            src = UncertaintySource(
+                                name=name, symbol=symbol, eval_type="B",
+                                value=0.0, distribution=DistributionType.RECTANGULAR,
+                                half_width=a_val,
+                            )
+                            st.session_state.wizard_sources.append(src)
+                            st.session_state.wizard_symbol_names.append(symbol)
+                            u_calc = a_val / 1.732
+                            st.caption(f"✅ 표준불확도 u = {a_val}/√3 = {u_calc:.4e}")
+
+                        elif input_type == "resolution":
+                            # B형 평가 (균일분포): 분해능
+                            res_val = st.number_input(
+                                f"{name} — 분해능",
+                                value=comp_spec.get("default_res", 0.01),
+                                format="%.4e",
+                                key=f"wiz_res_{symbol}",
+                            )
+                            src = UncertaintySource(
+                                name=name, symbol=symbol, eval_type="B",
+                                value=0.0, distribution=DistributionType.RECTANGULAR,
+                                half_width=res_val / 2,
+                            )
+                            st.session_state.wizard_sources.append(src)
+                            st.session_state.wizard_symbol_names.append(symbol)
+                            u_calc = (res_val / 2) / 1.732
+                            st.caption(f"✅ 표준불확도 u = ({res_val}/2)/√3 = {u_calc:.4e}")
+
+    else:
+        # 직접 입력 모드
+        st.divider()
+        with st.expander("⚙️ Step 2: 사용자 정의 모델 입력", expanded=True):
+            model_expr = st.text_input(
+                "측정 모델 수식",
+                value="a + b",
+                key="wizard_custom_expr",
+                help="Python/sympy 문법. 예: a + b, a * b, a**2 + b/c",
+            )
+            meas_name = st.text_input("측정량 기호", value="Y", key="wizard_meas_name")
+            meas_unit = st.text_input("단위", value="", key="wizard_meas_unit")
+
+            st.session_state.wizard_measurand_name = meas_name
+            st.session_state.wizard_measurand_unit = meas_unit
+            st.session_state.wizard_model_expr = model_expr
+
+            # 직접 입력 모드에서는 기존의 형식 유지
+            with st.form("wizard_add_source_custom", clear_on_submit=True):
+                st.markdown("**새 불확도 성분 추가**")
+
+                src_name = st.text_input("성분 이름 (예: 비교기 반복 측정)", key="wiz_src_name_custom")
+                src_symbol = st.text_input("수식에서 사용할 기호 (예: dL)", key="wiz_src_sym_custom")
+
+                how_known = st.selectbox(
+                    "이 값의 불확도를 어떻게 알았나요?",
+                    [
+                        "같은 측정을 여러번 반복했어요 (A형)",
+                        "교정성적서에 적혀 있어요 (B형-정규분포)",
+                        "사양서/규격서에 ±값이 있어요 (B형-균일분포)",
+                        "경험적으로 범위를 알아요 (B형-삼각분포)",
+                    ],
+                    key="wiz_how_known_custom",
+                )
+
+                if "반복" in how_known:
+                    data_str = st.text_input(
+                        "측정값을 쉼표로 입력해주세요",
+                        value="", key="wiz_data_custom",
+                        help="예: 0.10, 0.12, 0.08, 0.11, 0.09",
+                    )
+                elif "교정성적서" in how_known:
+                    wiz_U = st.number_input("교정성적서의 확장불확도(U) 값은?", value=0.05, format="%.4e", key="wiz_U_custom")
+                    wiz_k = st.number_input("포함인자(k) 값은? (보통 2입니다)", value=2.0, key="wiz_k_custom")
+                elif "사양서" in how_known:
+                    wiz_a = st.number_input("±값(반폭)은 얼마인가요?", value=0.01, format="%.4e", key="wiz_a_custom")
+                else:
+                    wiz_a_tri = st.number_input("범위(반폭)는 얼마인가요?", value=0.01, format="%.4e", key="wiz_a_tri_custom")
+
+                submitted = st.form_submit_button("성분 추가", type="primary")
+
+                if submitted and src_name and src_symbol:
+                    if "반복" in how_known:
+                        try:
+                            data_vals = [float(x.strip()) for x in data_str.split(",") if x.strip()]
+                        except ValueError:
+                            data_vals = []
+                        if len(data_vals) >= 2:
+                            src = UncertaintySource(
+                                name=src_name, symbol=src_symbol, eval_type="A",
+                                repeat_data=data_vals,
+                            )
+                            st.session_state.wizard_sources.append(src)
+                            st.session_state.wizard_symbol_names.append(src_symbol)
+                            st.success(f"✅ '{src_name}' 추가 완료 (A형 평가, 평균의 표준불확도 자동 계산)")
+                        else:
+                            st.error("최소 2개 이상의 데이터가 필요합니다.")
+                    elif "교정성적서" in how_known:
+                        src = UncertaintySource(
+                            name=src_name, symbol=src_symbol, eval_type="B",
+                            value=0.0, distribution=DistributionType.NORMAL,
+                            expanded_uncertainty_input=wiz_U, coverage_factor_input=wiz_k,
+                        )
+                        st.session_state.wizard_sources.append(src)
+                        st.session_state.wizard_symbol_names.append(src_symbol)
+                        st.success(f"✅ '{src_name}' 추가 완료 (B형 평가, 정규분포, u = {wiz_U}/{wiz_k} = {wiz_U/wiz_k:.4e})")
+                    elif "사양서" in how_known:
+                        src = UncertaintySource(
+                            name=src_name, symbol=src_symbol, eval_type="B",
+                            value=0.0, distribution=DistributionType.RECTANGULAR,
+                            half_width=wiz_a,
+                        )
+                        st.session_state.wizard_sources.append(src)
+                        st.session_state.wizard_symbol_names.append(src_symbol)
+                        st.success(f"✅ '{src_name}' 추가 완료 (B형 평가, 균일분포, u = {wiz_a}/√3 = {wiz_a / 1.732:.4e})")
+                    else:
+                        src = UncertaintySource(
+                            name=src_name, symbol=src_symbol, eval_type="B",
+                            value=0.0, distribution=DistributionType.TRIANGULAR,
+                            half_width=wiz_a_tri,
+                        )
+                        st.session_state.wizard_sources.append(src)
+                        st.session_state.wizard_symbol_names.append(src_symbol)
+                        st.success(f"✅ '{src_name}' 추가 완료 (B형 평가, 삼각분포, u = {wiz_a_tri}/√6 = {wiz_a_tri / 2.449:.4e})")
+
+            # 현재 추가된 성분 목록
+            if st.session_state.wizard_sources:
+                st.markdown("**추가된 성분 목록:**")
+                for i, src in enumerate(st.session_state.wizard_sources):
+                    u_val, _ = src.compute()
+                    eval_desc = "A형" if src.eval_type == "A" else f"B형-{src.distribution.value}"
+                    st.markdown(f"  {i+1}. **{src.name}** ({src.symbol}) — {eval_desc}, u = {u_val:.4e}")
+
+                if st.button("🗑️ 전체 초기화"):
+                    st.session_state.wizard_sources = []
+                    st.session_state.wizard_symbol_names = []
+                    st.rerun()
 
     st.divider()
 
-    # ─── Step 3+4: 계산 ───
-    st.markdown("### Step 3: 계산")
-
-    if len(st.session_state.wizard_sources) < 2:
-        st.warning("최소 2개 이상의 불확도 성분이 필요합니다.")
-    else:
-        # 모델 수식 구성 (직접입력이 아닌 경우 심볼 합산)
-        if target == "직접 입력":
-            expr = st.session_state.wizard_model_expr
-            syms = st.session_state.wizard_symbol_names
+    # ─── Step 3: 계산 ───
+    with st.expander("🚀 Step 3: 불확도 계산", expanded=True):
+        if len(st.session_state.wizard_sources) < 2:
+            st.warning("⚠️ 최소 2개 이상의 불확도 성분이 필요합니다. 위 Step 2에서 성분을 선택하고 값을 입력해주세요.")
         else:
-            syms = st.session_state.wizard_symbol_names
-            expr = " + ".join(syms)
+            # 모델 수식 구성
+            if target == "직접 입력":
+                expr = st.session_state.wizard_model_expr
+                syms = st.session_state.wizard_symbol_names
+            else:
+                syms = st.session_state.wizard_symbol_names
+                expr = " + ".join(syms)
 
-        st.info(f"측정 모델: `{st.session_state.wizard_measurand['name']} = {expr}`")
+            st.info(f"**최종 측정 모델:** `{st.session_state.wizard_measurand_name} = {expr}`")
+            st.info(f"**선택된 불확도 성분:** {', '.join([s.name for s in st.session_state.wizard_sources])}")
 
-        if st.button("🚀 불확도 계산 실행", type="primary", use_container_width=True, key="wizard_calc"):
-            try:
-                model = MeasurementModel(expr, syms)
-                calc = GUMCalculator(
-                    model, st.session_state.wizard_sources,
-                    measurand_name=st.session_state.wizard_measurand["name"],
-                    measurand_unit=st.session_state.wizard_measurand["unit"],
-                )
-                result = calc.calculate()
+            if st.button("🚀 불확도 계산 실행", type="primary", use_container_width=True, key="wizard_calc"):
+                try:
+                    model = MeasurementModel(expr, syms)
+                    calc = GUMCalculator(
+                        model, st.session_state.wizard_sources,
+                        measurand_name=st.session_state.wizard_measurand_name,
+                        measurand_unit=st.session_state.wizard_measurand_unit,
+                    )
+                    result = calc.calculate()
 
-                # 성분별 해설
-                st.markdown("### 성분별 해설")
-                for comp in result.components:
-                    src = comp.source
-                    if src.eval_type == "A":
-                        desc = f"**{src.name}**: A형 평가 (반복 측정 통계), 정규분포를 사용했습니다."
-                    else:
-                        desc = f"**{src.name}**: B형 평가, {src.distribution.value}를 사용했습니다."
-                    st.markdown(f"- {desc} (u = {comp.std_uncertainty:.4e})")
+                    # 성분별 해설
+                    st.markdown("### 📚 성분별 해설")
+                    for comp in result.components:
+                        src = comp.source
+                        if src.eval_type == "A":
+                            desc = f"**{src.name}**: A형 평가 (반복 측정 통계), 정규분포를 사용했습니다."
+                        else:
+                            desc = f"**{src.name}**: B형 평가, {src.distribution.value}를 사용했습니다."
+                        st.markdown(f"- {desc} (u = {comp.std_uncertainty:.4e})")
 
-                config = {
-                    "measurand_name": st.session_state.wizard_measurand["name"],
-                    "measurand_unit": st.session_state.wizard_measurand["unit"],
-                }
-                show_results(result, model, st.session_state.wizard_sources, config)
+                    config = {
+                        "measurand_name": st.session_state.wizard_measurand_name,
+                        "measurand_unit": st.session_state.wizard_measurand_unit,
+                    }
+                    show_results(result, model, st.session_state.wizard_sources, config)
 
-            except Exception as e:
-                st.error(f"계산 오류: {e}")
+                except Exception as e:
+                    st.error(f"계산 오류: {e}")
