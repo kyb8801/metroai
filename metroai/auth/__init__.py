@@ -1,1 +1,23 @@
-"""인증 모듈 (v0.2에서 구현 예정)."""
+"""인증 모듈."""
+
+from .auth_manager import (
+    AuthManager,
+    UsageManager,
+    get_auth_manager,
+    get_usage_manager,
+    init_auth_state,
+    render_auth_sidebar,
+    show_usage_info,
+    show_guest_notice,
+)
+
+__all__ = [
+    "AuthManager",
+    "UsageManager",
+    "get_auth_manager",
+    "get_usage_manager",
+    "init_auth_state",
+    "render_auth_sidebar",
+    "show_usage_info",
+    "show_guest_notice",
+]

@@ -15,6 +15,13 @@ project_root = Path(__file__).resolve().parent.parent
 if str(project_root) not in sys.path:
     sys.path.insert(0, str(project_root))
 
+from metroai.auth import (
+    init_auth_state,
+    render_auth_sidebar,
+    show_usage_info,
+    show_guest_notice,
+    get_usage_manager,
+)
 from metroai.core.distributions import DistributionType, UncertaintySource
 from metroai.core.gum import GUMCalculator, GUMResult
 from metroai.core.mcm import MCMCalculator
@@ -154,9 +161,78 @@ def show_results(result: GUMResult, model, sources, config: dict):
 
 
 # ──────────────────────────────────────────
+# 인증 및 사용량 관리
+# ──────────────────────────────────────────
+def check_and_track_calculation(username=None):
+    """계산 실행 전 사용량 확인 및 추적.
+
+    Args:
+        username: 로그인한 사용자명. None이면 게스트 모드.
+
+    Returns:
+        (can_proceed, message) 튜플
+        - can_proceed: True면 계산 진행 가능
+        - message: 안내 메시지 (제한시 표시)
+    """
+    if username is None:
+        # 게스트: 1회 제한
+        if "guest_calculation_done" not in st.session_state:
+            st.session_state.guest_calculation_done = False
+
+        if st.session_state.guest_calculation_done:
+            return False, "게스트는 1번의 계산만 가능합니다. 로그인 후 더 많은 계산을 이용하세요!"
+
+        return True, "게스트: 1회 계산 가능"
+
+    # 로그인 사용자: 월 3회 제한
+    usage_manager = get_usage_manager()
+    if not usage_manager.check_limit(username, limit=3):
+        return False, "이번 달 계산 한도(3회)를 초과했습니다. 내년 같은 기간에 이용할 수 있습니다."
+
+    return True, None
+
+
+def increment_calculation_usage(username=None):
+    """계산 실행 후 사용량 증가.
+
+    Args:
+        username: 로그인한 사용자명. None이면 게스트 모드.
+    """
+    if username is None:
+        # 게스트 계산 표시
+        st.session_state.guest_calculation_done = True
+    else:
+        # 사용자 사용량 증가
+        usage_manager = get_usage_manager()
+        usage_manager.increment_usage(username)
+
+
+# ──────────────────────────────────────────
 # 사이드바
 # ──────────────────────────────────────────
+# 인증 초기화
+init_auth_state()
+
+# 사이드바 인증 위젯
+username, name = render_auth_sidebar()
+
+# 인증 상태 세션 저장
+if username:
+    st.session_state.authenticated = True
+    st.session_state.username = username
+    st.session_state.name = name
+else:
+    st.session_state.authenticated = False
+    st.session_state.username = None
+    st.session_state.name = None
+
+# 사용량 정보 표시 및 모드 선택
 with st.sidebar:
+    if st.session_state.authenticated and st.session_state.username:
+        show_usage_info(st.session_state.username)
+    else:
+        show_guest_notice()
+
     st.title("📐 MetroAI")
     st.caption("KOLAS 불확도 예산서, 5분 만에.")
     st.divider()
@@ -224,19 +300,24 @@ if mode == "🔧 템플릿 사용":
 
         if readings and len(readings) >= 2:
             if st.button("🚀 불확도 계산 실행", type="primary", use_container_width=True, key="gb_calc"):
-                with st.spinner("GUM 불확도 전파 계산 중..."):
-                    model, sources, config = create_gauge_block_template(
-                        nominal_length_mm=nominal_length,
-                        comparator_readings=readings,
-                        std_cert_uncertainty_um=std_cert_u,
-                        std_cert_k=std_cert_k,
-                        alpha_uncertainty=alpha_unc,
-                        temp_deviation_C=temp_dev,
-                        temp_uncertainty_C=temp_unc,
-                    )
-                    calc = GUMCalculator(model, sources, measurand_name=config["measurand_name"], measurand_unit=config["measurand_unit"])
-                    result = calc.calculate()
-                show_results(result, model, sources, config)
+                can_proceed, msg = check_and_track_calculation(st.session_state.username)
+                if not can_proceed:
+                    st.error(msg)
+                else:
+                    with st.spinner("GUM 불확도 전파 계산 중..."):
+                        model, sources, config = create_gauge_block_template(
+                            nominal_length_mm=nominal_length,
+                            comparator_readings=readings,
+                            std_cert_uncertainty_um=std_cert_u,
+                            std_cert_k=std_cert_k,
+                            alpha_uncertainty=alpha_unc,
+                            temp_deviation_C=temp_dev,
+                            temp_uncertainty_C=temp_unc,
+                        )
+                        calc = GUMCalculator(model, sources, measurand_name=config["measurand_name"], measurand_unit=config["measurand_unit"])
+                        result = calc.calculate()
+                    increment_calculation_usage(st.session_state.username)
+                    show_results(result, model, sources, config)
 
     elif template == "질량 — 분동 교정":
         st.subheader("⚖️ 분동 교정")
@@ -259,18 +340,23 @@ if mode == "🔧 템플릿 사용":
 
         if readings and len(readings) >= 2:
             if st.button("🚀 불확도 계산 실행", type="primary", use_container_width=True, key="mass_calc"):
-                with st.spinner("계산 중..."):
-                    model, sources, config = create_mass_template(
-                        nominal_mass_g=nominal_mass,
-                        std_cert_U=std_cert_U,
-                        std_cert_k=std_cert_k_m,
-                        readings_mg=readings,
-                        resolution_mg=resolution,
-                        buoyancy_unc_mg=buoyancy,
-                    )
-                    calc = GUMCalculator(model, sources, measurand_name=config["measurand_name"], measurand_unit=config["measurand_unit"])
-                    result = calc.calculate()
-                show_results(result, model, sources, config)
+                can_proceed, msg = check_and_track_calculation(st.session_state.username)
+                if not can_proceed:
+                    st.error(msg)
+                else:
+                    with st.spinner("계산 중..."):
+                        model, sources, config = create_mass_template(
+                            nominal_mass_g=nominal_mass,
+                            std_cert_U=std_cert_U,
+                            std_cert_k=std_cert_k_m,
+                            readings_mg=readings,
+                            resolution_mg=resolution,
+                            buoyancy_unc_mg=buoyancy,
+                        )
+                        calc = GUMCalculator(model, sources, measurand_name=config["measurand_name"], measurand_unit=config["measurand_unit"])
+                        result = calc.calculate()
+                    increment_calculation_usage(st.session_state.username)
+                    show_results(result, model, sources, config)
 
     elif template == "온도 — 온도계 교정":
         st.subheader("🌡️ 온도계 교정")
@@ -294,19 +380,24 @@ if mode == "🔧 템플릿 사용":
 
         if readings and len(readings) >= 2:
             if st.button("🚀 불확도 계산 실행", type="primary", use_container_width=True, key="temp_calc"):
-                with st.spinner("계산 중..."):
-                    model, sources, config = create_temperature_template(
-                        cal_point_C=cal_point,
-                        std_cert_U_C=std_cert_U_t,
-                        std_cert_k=std_cert_k_t,
-                        readings_C=readings,
-                        stability_C=stability,
-                        uniformity_C=uniformity,
-                        resolution_C=resolution_t,
-                    )
-                    calc = GUMCalculator(model, sources, measurand_name=config["measurand_name"], measurand_unit=config["measurand_unit"])
-                    result = calc.calculate()
-                show_results(result, model, sources, config)
+                can_proceed, msg = check_and_track_calculation(st.session_state.username)
+                if not can_proceed:
+                    st.error(msg)
+                else:
+                    with st.spinner("계산 중..."):
+                        model, sources, config = create_temperature_template(
+                            cal_point_C=cal_point,
+                            std_cert_U_C=std_cert_U_t,
+                            std_cert_k=std_cert_k_t,
+                            readings_C=readings,
+                            stability_C=stability,
+                            uniformity_C=uniformity,
+                            resolution_C=resolution_t,
+                        )
+                        calc = GUMCalculator(model, sources, measurand_name=config["measurand_name"], measurand_unit=config["measurand_unit"])
+                        result = calc.calculate()
+                    increment_calculation_usage(st.session_state.username)
+                    show_results(result, model, sources, config)
 
     elif template == "압력 — 압력계 교정":
         st.subheader("🔧 압력계 교정")
@@ -330,19 +421,24 @@ if mode == "🔧 템플릿 사용":
 
         if readings and len(readings) >= 2:
             if st.button("🚀 불확도 계산 실행", type="primary", use_container_width=True, key="pres_calc"):
-                with st.spinner("계산 중..."):
-                    model, sources, config = create_pressure_template(
-                        cal_point_MPa=cal_point_p,
-                        std_cert_U_MPa=std_cert_U_p,
-                        std_cert_k=std_cert_k_p,
-                        readings_MPa=readings,
-                        resolution_MPa=resolution_p,
-                        hysteresis_MPa=hysteresis,
-                        zero_drift_MPa=zero_drift,
-                    )
-                    calc = GUMCalculator(model, sources, measurand_name=config["measurand_name"], measurand_unit=config["measurand_unit"])
-                    result = calc.calculate()
-                show_results(result, model, sources, config)
+                can_proceed, msg = check_and_track_calculation(st.session_state.username)
+                if not can_proceed:
+                    st.error(msg)
+                else:
+                    with st.spinner("계산 중..."):
+                        model, sources, config = create_pressure_template(
+                            cal_point_MPa=cal_point_p,
+                            std_cert_U_MPa=std_cert_U_p,
+                            std_cert_k=std_cert_k_p,
+                            readings_MPa=readings,
+                            resolution_MPa=resolution_p,
+                            hysteresis_MPa=hysteresis,
+                            zero_drift_MPa=zero_drift,
+                        )
+                        calc = GUMCalculator(model, sources, measurand_name=config["measurand_name"], measurand_unit=config["measurand_unit"])
+                        result = calc.calculate()
+                    increment_calculation_usage(st.session_state.username)
+                    show_results(result, model, sources, config)
 
 
 # ──────────────────────────────────────────
@@ -425,14 +521,19 @@ elif mode == "✏️ 직접 입력":
                     ))
 
     if sources_input and st.button("🚀 불확도 계산 실행", type="primary", use_container_width=True, key="manual_calc"):
-        try:
-            model = MeasurementModel(model_expr, symbol_names)
-            calc = GUMCalculator(model, sources_input, measurand_name="Y")
-            result = calc.calculate()
-            config = {"measurand_name": "Y", "measurand_unit": ""}
-            show_results(result, model, sources_input, config)
-        except Exception as e:
-            st.error(f"계산 오류: {e}")
+        can_proceed, msg = check_and_track_calculation(st.session_state.username)
+        if not can_proceed:
+            st.error(msg)
+        else:
+            try:
+                model = MeasurementModel(model_expr, symbol_names)
+                calc = GUMCalculator(model, sources_input, measurand_name="Y")
+                result = calc.calculate()
+                config = {"measurand_name": "Y", "measurand_unit": ""}
+                increment_calculation_usage(st.session_state.username)
+                show_results(result, model, sources_input, config)
+            except Exception as e:
+                st.error(f"계산 오류: {e}")
 
 
 # ──────────────────────────────────────────
@@ -937,30 +1038,35 @@ elif mode == "🧙 위자드 모드":
             st.info(f"**선택된 불확도 성분:** {', '.join([s.name for s in st.session_state.wizard_sources])}")
 
             if st.button("🚀 불확도 계산 실행", type="primary", use_container_width=True, key="wizard_calc"):
-                try:
-                    model = MeasurementModel(expr, syms)
-                    calc = GUMCalculator(
-                        model, st.session_state.wizard_sources,
-                        measurand_name=st.session_state.wizard_measurand_name,
-                        measurand_unit=st.session_state.wizard_measurand_unit,
-                    )
-                    result = calc.calculate()
+                can_proceed, msg = check_and_track_calculation(st.session_state.username)
+                if not can_proceed:
+                    st.error(msg)
+                else:
+                    try:
+                        model = MeasurementModel(expr, syms)
+                        calc = GUMCalculator(
+                            model, st.session_state.wizard_sources,
+                            measurand_name=st.session_state.wizard_measurand_name,
+                            measurand_unit=st.session_state.wizard_measurand_unit,
+                        )
+                        result = calc.calculate()
 
-                    # 성분별 해설
-                    st.markdown("### 📚 성분별 해설")
-                    for comp in result.components:
-                        src = comp.source
-                        if src.eval_type == "A":
-                            desc = f"**{src.name}**: A형 평가 (반복 측정 통계), 정규분포를 사용했습니다."
-                        else:
-                            desc = f"**{src.name}**: B형 평가, {src.distribution.value}를 사용했습니다."
-                        st.markdown(f"- {desc} (u = {comp.std_uncertainty:.4e})")
+                        # 성분별 해설
+                        st.markdown("### 📚 성분별 해설")
+                        for comp in result.components:
+                            src = comp.source
+                            if src.eval_type == "A":
+                                desc = f"**{src.name}**: A형 평가 (반복 측정 통계), 정규분포를 사용했습니다."
+                            else:
+                                desc = f"**{src.name}**: B형 평가, {src.distribution.value}를 사용했습니다."
+                            st.markdown(f"- {desc} (u = {comp.std_uncertainty:.4e})")
 
-                    config = {
-                        "measurand_name": st.session_state.wizard_measurand_name,
-                        "measurand_unit": st.session_state.wizard_measurand_unit,
-                    }
-                    show_results(result, model, st.session_state.wizard_sources, config)
+                        config = {
+                            "measurand_name": st.session_state.wizard_measurand_name,
+                            "measurand_unit": st.session_state.wizard_measurand_unit,
+                        }
+                        increment_calculation_usage(st.session_state.username)
+                        show_results(result, model, st.session_state.wizard_sources, config)
 
-                except Exception as e:
-                    st.error(f"계산 오류: {e}")
+                    except Exception as e:
+                        st.error(f"계산 오류: {e}")

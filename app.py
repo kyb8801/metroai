@@ -209,7 +209,7 @@ st.markdown(
 
 col_cta = st.columns([1, 2, 1])[1]
 with col_cta:
-    if st.button("🚀 지금 시작하기", type="primary", use_container_width=True, use_container_width=True):
+    if st.button("🚀 지금 시작하기", type="primary", use_container_width=True):
         st.switch_page("pages/1_📐_불확도_계산.py")
 
 st.markdown("")
