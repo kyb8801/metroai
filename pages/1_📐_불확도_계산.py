@@ -43,8 +43,12 @@ st.set_page_config(
 # ──────────────────────────────────────────
 # 공통: 결과 표시 함수
 # ──────────────────────────────────────────
-def show_results(result: GUMResult, model, sources, config: dict):
-    """GUM 결과를 화면에 표시."""
+def show_results(result: GUMResult, model, sources, config: dict, require_login_for_export: bool = True):
+    """GUM 결과를 화면에 표시.
+
+    Args:
+        require_login_for_export: True면 다운로드 시 로그인 요구 (PLG 퍼널)
+    """
     st.divider()
     st.subheader("📊 계산 결과")
 
@@ -111,53 +115,68 @@ def show_results(result: GUMResult, model, sources, config: dict):
     st.divider()
     st.subheader("📥 내보내기")
 
-    col_dl1, col_dl2 = st.columns(2)
-    with col_dl1:
-        excel_buf = export_budget_excel(result)
-        st.download_button(
-            "📊 엑셀 다운로드 (.xlsx)",
-            data=excel_buf,
-            file_name="불확도_예산표.xlsx",
-            mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-            use_container_width=True,
+    # PLG 게이트: 로그인 안 된 상태면 다운로드 잠금
+    is_logged_in = st.session_state.get("authenticated", False) and st.session_state.get("username")
+
+    if require_login_for_export and not is_logged_in:
+        st.info(
+            "🔒 **결과를 엑셀/PDF로 다운로드하려면 무료 회원가입이 필요합니다.**\n\n"
+            "왼쪽 사이드바에서 30초 만에 가입하세요 — 매월 3건 무료!"
         )
-
-    with col_dl2:
-        with st.expander("📄 교정성적서 PDF 다운로드"):
-            cert_number = st.text_input("성적서 번호", value="CAL-2026-001", key="cert_num")
-            cert_org = st.text_input("교정기관명", value="", key="cert_org")
-            cert_kolas = st.text_input("KOLAS 인정번호", value="KOLAS-", key="cert_kolas")
-            cert_client = st.text_input("의뢰기관명", value="", key="cert_client")
-            cert_equip = st.text_input("교정 대상 기기", value="", key="cert_equip")
-
-            cert_info = {
-                "cert_number": cert_number,
-                "cal_org": cert_org,
-                "cal_org_kolas_id": cert_kolas,
-                "cal_org_address": "",
-                "client_org": cert_client,
-                "client_address": "",
-                "equipment_name": cert_equip,
-                "manufacturer": "",
-                "model": "",
-                "serial_number": "",
-                "cal_date": "2026-04-04",
-                "cal_location": "",
-                "temperature": "20.0 +/- 0.5",
-                "humidity": "50 +/- 10",
-                "calibrator_name": "",
-                "reviewer_name": "",
-                "approver_name": "",
-            }
-
-            pdf_buf = export_calibration_certificate_pdf(result, cert_info)
+        # 미리보기: 어떤 파일을 받을 수 있는지 보여줌
+        col_dl1, col_dl2 = st.columns(2)
+        with col_dl1:
+            st.button("📊 엑셀 다운로드 (.xlsx)", disabled=True, use_container_width=True)
+        with col_dl2:
+            st.button("📄 교정성적서 PDF 다운로드", disabled=True, use_container_width=True)
+    else:
+        col_dl1, col_dl2 = st.columns(2)
+        with col_dl1:
+            excel_buf = export_budget_excel(result)
             st.download_button(
-                "📄 PDF 다운로드",
-                data=pdf_buf,
-                file_name=f"교정성적서_{cert_number}.pdf",
-                mime="application/pdf",
+                "📊 엑셀 다운로드 (.xlsx)",
+                data=excel_buf,
+                file_name="불확도_예산표.xlsx",
+                mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
                 use_container_width=True,
             )
+
+        with col_dl2:
+            with st.expander("📄 교정성적서 PDF 다운로드"):
+                cert_number = st.text_input("성적서 번호", value="CAL-2026-001", key="cert_num")
+                cert_org = st.text_input("교정기관명", value="", key="cert_org")
+                cert_kolas = st.text_input("KOLAS 인정번호", value="KOLAS-", key="cert_kolas")
+                cert_client = st.text_input("의뢰기관명", value="", key="cert_client")
+                cert_equip = st.text_input("교정 대상 기기", value="", key="cert_equip")
+
+                cert_info = {
+                    "cert_number": cert_number,
+                    "cal_org": cert_org,
+                    "cal_org_kolas_id": cert_kolas,
+                    "cal_org_address": "",
+                    "client_org": cert_client,
+                    "client_address": "",
+                    "equipment_name": cert_equip,
+                    "manufacturer": "",
+                    "model": "",
+                    "serial_number": "",
+                    "cal_date": "2026-04-04",
+                    "cal_location": "",
+                    "temperature": "20.0 +/- 0.5",
+                    "humidity": "50 +/- 10",
+                    "calibrator_name": "",
+                    "reviewer_name": "",
+                    "approver_name": "",
+                }
+
+                pdf_buf = export_calibration_certificate_pdf(result, cert_info)
+                st.download_button(
+                    "📄 PDF 다운로드",
+                    data=pdf_buf,
+                    file_name=f"교정성적서_{cert_number}.pdf",
+                    mime="application/pdf",
+                    use_container_width=True,
+                )
 
 
 # ──────────────────────────────────────────
@@ -300,24 +319,21 @@ if mode == "🔧 템플릿 사용":
 
         if readings and len(readings) >= 2:
             if st.button("🚀 불확도 계산 실행", type="primary", use_container_width=True, key="gb_calc"):
-                can_proceed, msg = check_and_track_calculation(st.session_state.username)
-                if not can_proceed:
-                    st.error(msg)
-                else:
-                    with st.spinner("GUM 불확도 전파 계산 중..."):
-                        model, sources, config = create_gauge_block_template(
-                            nominal_length_mm=nominal_length,
-                            comparator_readings=readings,
-                            std_cert_uncertainty_um=std_cert_u,
-                            std_cert_k=std_cert_k,
-                            alpha_uncertainty=alpha_unc,
-                            temp_deviation_C=temp_dev,
-                            temp_uncertainty_C=temp_unc,
-                        )
-                        calc = GUMCalculator(model, sources, measurand_name=config["measurand_name"], measurand_unit=config["measurand_unit"])
-                        result = calc.calculate()
+                with st.spinner("GUM 불확도 전파 계산 중..."):
+                    model, sources, config = create_gauge_block_template(
+                        nominal_length_mm=nominal_length,
+                        comparator_readings=readings,
+                        std_cert_uncertainty_um=std_cert_u,
+                        std_cert_k=std_cert_k,
+                        alpha_uncertainty=alpha_unc,
+                        temp_deviation_C=temp_dev,
+                        temp_uncertainty_C=temp_unc,
+                    )
+                    calc = GUMCalculator(model, sources, measurand_name=config["measurand_name"], measurand_unit=config["measurand_unit"])
+                    result = calc.calculate()
+                if st.session_state.get("username"):
                     increment_calculation_usage(st.session_state.username)
-                    show_results(result, model, sources, config)
+                show_results(result, model, sources, config)
 
     elif template == "질량 — 분동 교정":
         st.subheader("⚖️ 분동 교정")
@@ -340,23 +356,20 @@ if mode == "🔧 템플릿 사용":
 
         if readings and len(readings) >= 2:
             if st.button("🚀 불확도 계산 실행", type="primary", use_container_width=True, key="mass_calc"):
-                can_proceed, msg = check_and_track_calculation(st.session_state.username)
-                if not can_proceed:
-                    st.error(msg)
-                else:
-                    with st.spinner("계산 중..."):
-                        model, sources, config = create_mass_template(
-                            nominal_mass_g=nominal_mass,
-                            std_cert_U=std_cert_U,
-                            std_cert_k=std_cert_k_m,
-                            readings_mg=readings,
-                            resolution_mg=resolution,
-                            buoyancy_unc_mg=buoyancy,
-                        )
-                        calc = GUMCalculator(model, sources, measurand_name=config["measurand_name"], measurand_unit=config["measurand_unit"])
-                        result = calc.calculate()
+                with st.spinner("계산 중..."):
+                    model, sources, config = create_mass_template(
+                        nominal_mass_g=nominal_mass,
+                        std_cert_U=std_cert_U,
+                        std_cert_k=std_cert_k_m,
+                        readings_mg=readings,
+                        resolution_mg=resolution,
+                        buoyancy_unc_mg=buoyancy,
+                    )
+                    calc = GUMCalculator(model, sources, measurand_name=config["measurand_name"], measurand_unit=config["measurand_unit"])
+                    result = calc.calculate()
+                if st.session_state.get("username"):
                     increment_calculation_usage(st.session_state.username)
-                    show_results(result, model, sources, config)
+                show_results(result, model, sources, config)
 
     elif template == "온도 — 온도계 교정":
         st.subheader("🌡️ 온도계 교정")
@@ -380,24 +393,21 @@ if mode == "🔧 템플릿 사용":
 
         if readings and len(readings) >= 2:
             if st.button("🚀 불확도 계산 실행", type="primary", use_container_width=True, key="temp_calc"):
-                can_proceed, msg = check_and_track_calculation(st.session_state.username)
-                if not can_proceed:
-                    st.error(msg)
-                else:
-                    with st.spinner("계산 중..."):
-                        model, sources, config = create_temperature_template(
-                            cal_point_C=cal_point,
-                            std_cert_U_C=std_cert_U_t,
-                            std_cert_k=std_cert_k_t,
-                            readings_C=readings,
-                            stability_C=stability,
-                            uniformity_C=uniformity,
-                            resolution_C=resolution_t,
-                        )
-                        calc = GUMCalculator(model, sources, measurand_name=config["measurand_name"], measurand_unit=config["measurand_unit"])
-                        result = calc.calculate()
+                with st.spinner("계산 중..."):
+                    model, sources, config = create_temperature_template(
+                        cal_point_C=cal_point,
+                        std_cert_U_C=std_cert_U_t,
+                        std_cert_k=std_cert_k_t,
+                        readings_C=readings,
+                        stability_C=stability,
+                        uniformity_C=uniformity,
+                        resolution_C=resolution_t,
+                    )
+                    calc = GUMCalculator(model, sources, measurand_name=config["measurand_name"], measurand_unit=config["measurand_unit"])
+                    result = calc.calculate()
+                if st.session_state.get("username"):
                     increment_calculation_usage(st.session_state.username)
-                    show_results(result, model, sources, config)
+                show_results(result, model, sources, config)
 
     elif template == "압력 — 압력계 교정":
         st.subheader("🔧 압력계 교정")
@@ -421,24 +431,21 @@ if mode == "🔧 템플릿 사용":
 
         if readings and len(readings) >= 2:
             if st.button("🚀 불확도 계산 실행", type="primary", use_container_width=True, key="pres_calc"):
-                can_proceed, msg = check_and_track_calculation(st.session_state.username)
-                if not can_proceed:
-                    st.error(msg)
-                else:
-                    with st.spinner("계산 중..."):
-                        model, sources, config = create_pressure_template(
-                            cal_point_MPa=cal_point_p,
-                            std_cert_U_MPa=std_cert_U_p,
-                            std_cert_k=std_cert_k_p,
-                            readings_MPa=readings,
-                            resolution_MPa=resolution_p,
-                            hysteresis_MPa=hysteresis,
-                            zero_drift_MPa=zero_drift,
-                        )
-                        calc = GUMCalculator(model, sources, measurand_name=config["measurand_name"], measurand_unit=config["measurand_unit"])
-                        result = calc.calculate()
+                with st.spinner("계산 중..."):
+                    model, sources, config = create_pressure_template(
+                        cal_point_MPa=cal_point_p,
+                        std_cert_U_MPa=std_cert_U_p,
+                        std_cert_k=std_cert_k_p,
+                        readings_MPa=readings,
+                        resolution_MPa=resolution_p,
+                        hysteresis_MPa=hysteresis,
+                        zero_drift_MPa=zero_drift,
+                    )
+                    calc = GUMCalculator(model, sources, measurand_name=config["measurand_name"], measurand_unit=config["measurand_unit"])
+                    result = calc.calculate()
+                if st.session_state.get("username"):
                     increment_calculation_usage(st.session_state.username)
-                    show_results(result, model, sources, config)
+                show_results(result, model, sources, config)
 
 
 # ──────────────────────────────────────────
@@ -521,19 +528,16 @@ elif mode == "✏️ 직접 입력":
                     ))
 
     if sources_input and st.button("🚀 불확도 계산 실행", type="primary", use_container_width=True, key="manual_calc"):
-        can_proceed, msg = check_and_track_calculation(st.session_state.username)
-        if not can_proceed:
-            st.error(msg)
-        else:
-            try:
-                model = MeasurementModel(model_expr, symbol_names)
-                calc = GUMCalculator(model, sources_input, measurand_name="Y")
-                result = calc.calculate()
-                config = {"measurand_name": "Y", "measurand_unit": ""}
+        try:
+            model = MeasurementModel(model_expr, symbol_names)
+            calc = GUMCalculator(model, sources_input, measurand_name="Y")
+            result = calc.calculate()
+            config = {"measurand_name": "Y", "measurand_unit": ""}
+            if st.session_state.get("username"):
                 increment_calculation_usage(st.session_state.username)
-                show_results(result, model, sources_input, config)
-            except Exception as e:
-                st.error(f"계산 오류: {e}")
+            show_results(result, model, sources_input, config)
+        except Exception as e:
+            st.error(f"계산 오류: {e}")
 
 
 # ──────────────────────────────────────────
