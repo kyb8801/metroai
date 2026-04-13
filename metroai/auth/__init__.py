@@ -9,6 +9,7 @@ from .auth_manager import (
     render_auth_sidebar,
     show_usage_info,
     show_guest_notice,
+    is_admin,
 )
 
 __all__ = [
@@ -20,4 +21,5 @@ __all__ = [
     "render_auth_sidebar",
     "show_usage_info",
     "show_guest_notice",
+    "is_admin",
 ]
