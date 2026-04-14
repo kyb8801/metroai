@@ -1,6 +1,10 @@
-"""MetroAI — 전문적인 랜딩 페이지.
+"""MetroAI — 전문적인 랜딩 페이지 (v0.5.0).
 
-Streamlit Cloud 진입점. KOLAS 측정불확도 자동화 플랫폼 소개.
+Streamlit Cloud 진입점. KOLAS 컴플라이언스 자동화 플랫폼 소개.
+슈어소프트 벤치마킹 반영:
+ - 5개 도구 카드 병렬 제시
+ - 지원 표준 배지 스트립
+ - "심사 서류 N종 자동 생성" 카운터
 """
 
 from __future__ import annotations
@@ -16,7 +20,7 @@ if str(project_root) not in sys.path:
     sys.path.insert(0, str(project_root))
 
 st.set_page_config(
-    page_title="MetroAI — KOLAS 불확도 예산 자동화",
+    page_title="MetroAI — KOLAS 심사 준비 자동화 플랫폼",
     page_icon="📐",
     layout="wide",
 )
@@ -29,132 +33,161 @@ st.markdown(
     <style>
     .hero-container {
         text-align: center;
-        padding: 4rem 2rem;
+        padding: 3.5rem 2rem 2.5rem 2rem;
         background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
         color: white;
-        border-radius: 10px;
-        margin-bottom: 2rem;
+        border-radius: 12px;
+        margin-bottom: 1.5rem;
     }
     .hero-title {
-        font-size: 3.5rem;
+        font-size: 3.2rem;
         font-weight: 700;
         margin-bottom: 0.5rem;
         letter-spacing: -0.02em;
     }
     .hero-tagline {
-        font-size: 1.5rem;
+        font-size: 1.4rem;
         font-weight: 300;
-        margin-bottom: 2rem;
+        margin-bottom: 0.5rem;
         opacity: 0.95;
     }
-    .feature-card {
-        background: #f8f9fa;
-        padding: 2rem;
-        border-radius: 8px;
-        border-left: 4px solid #667eea;
-        height: 100%;
-        transition: transform 0.2s, box-shadow 0.2s;
+    .hero-sub {
+        font-size: 1.0rem;
+        opacity: 0.85;
     }
-    .feature-card:hover {
-        transform: translateY(-4px);
-        box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+    /* 표준 배지 스트립 */
+    .standards-strip {
+        display: flex;
+        flex-wrap: wrap;
+        justify-content: center;
+        gap: 0.5rem;
+        padding: 1rem 0 2rem 0;
     }
-    .feature-icon {
-        font-size: 2.5rem;
-        margin-bottom: 1rem;
+    .std-badge {
+        display: inline-block;
+        padding: 0.35rem 0.85rem;
+        background: #f0f2ff;
+        color: #4a4ea0;
+        border: 1px solid #d0d6f5;
+        border-radius: 20px;
+        font-size: 0.82rem;
+        font-weight: 500;
+        letter-spacing: 0.01em;
     }
-    .feature-title {
-        font-size: 1.2rem;
-        font-weight: 600;
-        margin-bottom: 0.5rem;
-        color: #222;
+    .std-badge.primary {
+        background: #4a4ea0;
+        color: white;
+        border-color: #4a4ea0;
     }
-    .feature-desc {
-        color: #666;
-        line-height: 1.6;
-        font-size: 0.95rem;
-    }
-    .pricing-card {
-        border: 2px solid #e0e0e0;
-        border-radius: 8px;
+    /* 산출물 카운터 */
+    .counter-box {
+        background: linear-gradient(135deg, #f8f9ff 0%, #e8ecff 100%);
+        border: 2px solid #c0c8f5;
+        border-radius: 12px;
         padding: 2rem;
         text-align: center;
-        transition: all 0.2s;
+        margin: 1rem 0 2rem 0;
     }
-    .pricing-card.recommended {
-        border-color: #667eea;
-        background: #f5f7ff;
-        transform: scale(1.05);
-    }
-    .pricing-card:hover {
-        box-shadow: 0 8px 20px rgba(102, 126, 234, 0.15);
-    }
-    .pricing-badge {
-        display: inline-block;
-        background: #667eea;
-        color: white;
-        padding: 0.4rem 0.8rem;
-        border-radius: 20px;
-        font-size: 0.8rem;
-        font-weight: 600;
-        margin-bottom: 1rem;
-    }
-    .pricing-title {
-        font-size: 1.5rem;
-        font-weight: 700;
+    .counter-label {
+        font-size: 1.0rem;
+        color: #666;
         margin-bottom: 0.5rem;
     }
-    .pricing-price {
-        font-size: 2rem;
-        font-weight: 700;
-        color: #667eea;
+    .counter-number {
+        font-size: 3.5rem;
+        font-weight: 800;
+        color: #4a4ea0;
+        line-height: 1.0;
+        margin: 0.3rem 0;
+    }
+    .counter-unit {
+        font-size: 1.1rem;
+        color: #666;
         margin-bottom: 1rem;
     }
-    .pricing-features {
+    .counter-list {
+        display: inline-block;
         text-align: left;
-        font-size: 0.9rem;
-        color: #666;
+        font-size: 0.92rem;
+        color: #555;
         line-height: 1.8;
+        margin-top: 0.5rem;
     }
-    .comparison-table {
-        width: 100%;
-        border-collapse: collapse;
-        margin: 1rem 0;
+    /* 5-도구 카드 */
+    .tool-card {
+        background: white;
+        padding: 1.8rem 1.2rem;
+        border-radius: 10px;
+        border: 1px solid #e0e4f0;
+        height: 100%;
+        transition: all 0.2s;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        text-align: center;
     }
-    .comparison-table th,
-    .comparison-table td {
-        padding: 1rem;
-        text-align: left;
-        border-bottom: 1px solid #e0e0e0;
+    .tool-card:hover {
+        transform: translateY(-4px);
+        box-shadow: 0 8px 20px rgba(74, 78, 160, 0.12);
+        border-color: #667eea;
     }
-    .comparison-table th {
-        background: #f5f7ff;
+    .tool-card.featured {
+        border: 2px solid #667eea;
+        background: linear-gradient(180deg, #fafbff 0%, #ffffff 60%);
+    }
+    .tool-card.disabled {
+        opacity: 0.75;
+        background: #f8f8fa;
+    }
+    .tool-icon {
+        font-size: 2.8rem;
+        margin-bottom: 0.8rem;
+    }
+    .tool-name {
+        font-size: 1.15rem;
+        font-weight: 700;
+        color: #222;
+        margin-bottom: 0.3rem;
+    }
+    .tool-badge {
+        font-size: 0.72rem;
+        padding: 0.18rem 0.55rem;
+        background: #fff3e0;
+        color: #e65100;
+        border-radius: 10px;
         font-weight: 600;
-        color: #667eea;
+        margin-bottom: 0.5rem;
+        display: inline-block;
     }
-    .comparison-table tr:hover {
-        background: #f8f9fa;
+    .tool-badge.first {
+        background: #fce4ec;
+        color: #c2185b;
     }
-    .before-cell {
-        color: #d32f2f;
-        font-weight: 500;
+    .tool-badge.soon {
+        background: #e0e0e0;
+        color: #616161;
     }
-    .after-cell {
-        color: #388e3c;
-        font-weight: 500;
+    .tool-desc {
+        color: #666;
+        font-size: 0.88rem;
+        line-height: 1.55;
+        flex-grow: 1;
+        margin-bottom: 1rem;
     }
+    /* 3단계 가이드 */
     .step-card {
-        background: #f8f9fa;
-        padding: 1.5rem;
-        border-radius: 8px;
+        background: #f8f9ff;
+        padding: 1.5rem 1.2rem;
+        border-radius: 10px;
         text-align: center;
         border-top: 4px solid #667eea;
+        height: 100%;
     }
     .step-number {
         font-size: 2.5rem;
         font-weight: 700;
         color: #667eea;
-        margin-bottom: 0.5rem;
+        margin-bottom: 0.3rem;
     }
     .step-title {
         font-size: 1.1rem;
@@ -165,26 +198,75 @@ st.markdown(
     .step-desc {
         color: #666;
         font-size: 0.9rem;
+        line-height: 1.55;
     }
-    .faq-item {
-        background: #f8f9fa;
-        padding: 1.5rem;
-        border-radius: 8px;
-        margin-bottom: 1rem;
+    /* Before/After 테이블 */
+    .comparison-table {
+        width: 100%;
+        border-collapse: collapse;
+        margin: 1rem 0;
     }
-    .faq-question {
+    .comparison-table th,
+    .comparison-table td {
+        padding: 0.9rem;
+        text-align: left;
+        border-bottom: 1px solid #e0e0e0;
+    }
+    .comparison-table th {
+        background: #f5f7ff;
         font-weight: 600;
         color: #667eea;
-        margin-bottom: 0.5rem;
-        font-size: 1.05rem;
+    }
+    .before-cell { color: #d32f2f; font-weight: 500; }
+    .after-cell  { color: #388e3c; font-weight: 500; }
+    /* 요금제 */
+    .pricing-card {
+        border: 2px solid #e0e0e0;
+        border-radius: 8px;
+        padding: 1.8rem 1.2rem;
+        text-align: center;
+        transition: all 0.2s;
+        height: 100%;
+    }
+    .pricing-card.recommended {
+        border-color: #667eea;
+        background: #f5f7ff;
+    }
+    .pricing-badge {
+        display: inline-block;
+        background: #667eea;
+        color: white;
+        padding: 0.3rem 0.7rem;
+        border-radius: 20px;
+        font-size: 0.75rem;
+        font-weight: 600;
+        margin-bottom: 0.8rem;
+    }
+    .pricing-title {
+        font-size: 1.35rem;
+        font-weight: 700;
+        margin-bottom: 0.3rem;
+    }
+    .pricing-price {
+        font-size: 1.8rem;
+        font-weight: 700;
+        color: #667eea;
+        margin-bottom: 0.7rem;
+    }
+    .pricing-features {
+        text-align: left;
+        font-size: 0.88rem;
+        color: #666;
+        line-height: 1.8;
     }
     .footer-content {
         text-align: center;
         color: #888;
-        font-size: 0.9rem;
-        padding: 2rem 0;
+        font-size: 0.88rem;
+        padding: 2rem 0 1rem 0;
         border-top: 1px solid #e0e0e0;
-        line-height: 1.8;
+        line-height: 1.7;
+        margin-top: 2rem;
     }
     </style>
     """,
@@ -192,232 +274,273 @@ st.markdown(
 )
 
 # ──────────────────────────────────────────
-# 1. 히어로 섹션 (개선)
+# 1. 히어로
 # ──────────────────────────────────────────
 st.markdown(
     """
     <div class="hero-container">
         <div class="hero-title">📐 MetroAI</div>
-        <div class="hero-tagline">KOLAS 측정불확도 예산표, 5분 만에 완성</div>
-        <p style="margin-bottom: 2rem; font-size: 1.05rem; opacity: 0.9;">
-            복잡한 GUM 계산을 자동화하고, KOLAS 심사 준비를 앞당기세요.
-        </p>
+        <div class="hero-tagline">KOLAS 인정, 어디서부터 시작할지 모르겠다면</div>
+        <div class="hero-sub">
+            심사 준비 체크리스트부터 불확도 예산표·교정성적서 자동 생성까지 — MetroAI가 안내합니다.
+        </div>
     </div>
     """,
     unsafe_allow_html=True,
 )
 
-col_cta = st.columns([1, 2, 1])[1]
-with col_cta:
-    if st.button("🚀 지금 시작하기", type="primary", use_container_width=True):
-        st.switch_page("pages/1_📐_불확도_계산.py")
-
-st.markdown("")
+# CTA 버튼
+col_cta1, col_cta2, col_cta3 = st.columns([1, 2, 1])
+with col_cta2:
+    cta_a, cta_b = st.columns(2)
+    with cta_a:
+        if st.button("🚀 불확도 계산 바로가기", type="primary", use_container_width=True):
+            st.switch_page("pages/1_📐_불확도_계산.py")
+    with cta_b:
+        if st.button("📄 교정성적서 만들기", use_container_width=True):
+            st.switch_page("pages/3_📄_교정성적서.py")
 
 # ──────────────────────────────────────────
-# 2. 어떻게 작동하나요? (NEW - 3단계)
+# 2. 지원 표준 배지 스트립 (NEW — 슈어소프트 B-2)
 # ──────────────────────────────────────────
-st.markdown("## 🎯 어떻게 작동하나요?")
-st.markdown("MetroAI의 위자드 모드로 3단계만 거치면 완성됩니다.")
+st.markdown(
+    """
+    <div class="standards-strip">
+        <span class="std-badge primary">ISO/IEC 17025:2017</span>
+        <span class="std-badge primary">KOLAS-G-001</span>
+        <span class="std-badge primary">KOLAS-G-002</span>
+        <span class="std-badge">KOLAS-G-004</span>
+        <span class="std-badge">GUM (ISO/IEC Guide 98-3)</span>
+        <span class="std-badge">GUM Supplement 1 (MCM)</span>
+        <span class="std-badge">ISO 13528</span>
+        <span class="std-badge">ISO 17043</span>
+    </div>
+    """,
+    unsafe_allow_html=True,
+)
+
+# ──────────────────────────────────────────
+# 3. 산출물 카운터 (NEW — 슈어소프트 B-3)
+# ──────────────────────────────────────────
+st.markdown(
+    """
+    <div class="counter-box">
+        <div class="counter-label">KOLAS 심사 서류 23종 중</div>
+        <div class="counter-number">2</div>
+        <div class="counter-unit">종 자동 생성 중 &nbsp;·&nbsp; 로드맵에서 5종까지 확장</div>
+        <div class="counter-list">
+            ✅ 측정불확도 예산표 (KOLAS-G-002 양식)<br>
+            ✅ 교정성적서 PDF<br>
+            🔄 PT 결과 보고서 <em style="color:#888;">(로드맵)</em><br>
+            🔄 소급성 체계도 <em style="color:#888;">(로드맵)</em><br>
+            🔄 장비 교정 이력 관리대장 <em style="color:#888;">(로드맵)</em>
+        </div>
+    </div>
+    """,
+    unsafe_allow_html=True,
+)
+
+# ──────────────────────────────────────────
+# 4. 3단계 가이드
+# ──────────────────────────────────────────
+st.markdown("## 🎯 KOLAS 인정, 어떻게 준비하나요?")
+st.caption("MetroAI는 KOLAS 심사의 전체 여정을 3단계로 안내합니다.")
 
 step1, step2, step3 = st.columns(3)
-
 with step1:
     st.markdown(
         """
         <div class="step-card">
             <div class="step-number">1️⃣</div>
-            <div class="step-title">교정 분야 선택</div>
+            <div class="step-title">KOLAS 이해하기</div>
             <div class="step-desc">
-                블록게이지, 분동, 온도, 압력 등<br>
-                교정 분야를 선택하세요.
+                KOLAS 인정이 무엇인지,<br>
+                우리 기관에 필요한지 확인하고<br>
+                심사 준비 흐름을 파악하세요.
             </div>
         </div>
         """,
         unsafe_allow_html=True,
     )
-
 with step2:
     st.markdown(
         """
         <div class="step-card">
             <div class="step-number">2️⃣</div>
-            <div class="step-title">측정값 입력</div>
+            <div class="step-title">서류 준비</div>
             <div class="step-desc">
-                위자드가 GUM 불확도 요소를<br>
-                자동으로 분류하고 안내합니다.
+                심사 제출 서류 23종 체크리스트로<br>
+                무엇이 필요한지 한눈에 확인하고,<br>
+                MetroAI가 자동 생성 가능한 것부터 시작.
             </div>
         </div>
         """,
         unsafe_allow_html=True,
     )
-
 with step3:
     st.markdown(
         """
         <div class="step-card">
             <div class="step-number">3️⃣</div>
-            <div class="step-title">결과 확인</div>
+            <div class="step-title">불확도 예산표 작성</div>
             <div class="step-desc">
-                예산표 + MCM 검증 + PDF/엑셀<br>
-                한 번에 생성되어 다운로드됩니다.
+                GUM 기반 불확도 계산부터<br>
+                MCM 검증·교정성적서 PDF까지<br>
+                원스톱으로 완성합니다.
             </div>
         </div>
         """,
         unsafe_allow_html=True,
     )
 
-st.markdown("")
+st.markdown("&nbsp;")
 
 # ──────────────────────────────────────────
-# 3. 주요 기능 (개선 - 6개 카드, 2x3 그리드)
+# 5. MetroAI 도구 세트 — 5개 카드 (NEW — 슈어소프트 B-1)
 # ──────────────────────────────────────────
-st.markdown("## ⚙️ 주요 기능")
-st.markdown("MetroAI는 KOLAS 교정 업무의 전체 흐름을 자동화합니다.")
+st.markdown("## ⚙️ MetroAI 도구 세트")
+st.caption("단일 도구가 아닌, KOLAS 업무 전 과정을 커버하는 5개 도구의 집합입니다.")
 
-# 첫 번째 행
-feature_row1_col1, feature_row1_col2, feature_row1_col3 = st.columns(3)
+tool_cols = st.columns(5)
 
-with feature_row1_col1:
+with tool_cols[0]:
     st.markdown(
         """
-        <div class="feature-card">
-            <div class="feature-icon">📐</div>
-            <div class="feature-title">불확도 자동 계산</div>
-            <div class="feature-desc">
-                GUM 기반 합성불확도를 자동으로 계산하고,
-                MCM(몬테카를로)으로 검증합니다.
-                위자드 모드로 GUM을 몰라도 괜찮습니다.
+        <div class="tool-card featured">
+            <div class="tool-icon">📐</div>
+            <div class="tool-name">불확도 계산</div>
+            <div class="tool-badge">핵심 도구</div>
+            <div class="tool-desc">
+                GUM 기반 합성불확도 자동 계산,<br>
+                MCM 몬테카를로 검증,<br>
+                KOLAS-G-002 양식 출력.
             </div>
         </div>
         """,
         unsafe_allow_html=True,
     )
+    if st.button("📐 시작하기", key="tool_calc", use_container_width=True):
+        st.switch_page("pages/1_📐_불확도_계산.py")
 
-with feature_row1_col2:
+with tool_cols[1]:
     st.markdown(
         """
-        <div class="feature-card">
-            <div class="feature-icon">🔬</div>
-            <div class="feature-title">MCM 검증</div>
-            <div class="feature-desc">
-                GUM Supplement 1 기반 몬테카를로 시뮬레이션으로
-                예산표 신뢰성을 검증합니다.
-                심사 준비 시 강력한 근거 자료가 됩니다.
+        <div class="tool-card">
+            <div class="tool-icon">📊</div>
+            <div class="tool-name">PT 분석</div>
+            <div class="tool-badge">ISO 13528</div>
+            <div class="tool-desc">
+                숙련도시험 결과를<br>
+                z-score / En / ζ-score로<br>
+                자동 판정합니다.
             </div>
         </div>
         """,
         unsafe_allow_html=True,
     )
+    if st.button("📊 시작하기", key="tool_pt", use_container_width=True):
+        st.switch_page("pages/2_📊_PT_분석.py")
 
-with feature_row1_col3:
+with tool_cols[2]:
     st.markdown(
         """
-        <div class="feature-card">
-            <div class="feature-icon">📊</div>
-            <div class="feature-title">숙련도시험 분석</div>
-            <div class="feature-desc">
-                z-score, En number, ζ-score를 자동 계산하고
-                CSV 일괄 업로드를 지원합니다.
-                PT 결과를 즉시 평가합니다.
+        <div class="tool-card">
+            <div class="tool-icon">📄</div>
+            <div class="tool-name">교정성적서</div>
+            <div class="tool-badge">KOLAS 양식</div>
+            <div class="tool-desc">
+                KOLAS 양식 교정성적서 PDF,<br>
+                심사 서류 체크리스트,<br>
+                예시 다운로드 제공.
             </div>
         </div>
         """,
         unsafe_allow_html=True,
     )
+    if st.button("📄 시작하기", key="tool_cert", use_container_width=True):
+        st.switch_page("pages/3_📄_교정성적서.py")
 
-# 두 번째 행
-feature_row2_col1, feature_row2_col2, feature_row2_col3 = st.columns(3)
-
-with feature_row2_col1:
+with tool_cols[3]:
     st.markdown(
         """
-        <div class="feature-card">
-            <div class="feature-icon">📄</div>
-            <div class="feature-title">교정성적서 PDF</div>
-            <div class="feature-desc">
-                KOLAS 양식 교정성적서를 원클릭으로 생성합니다.
-                불확도 예산표와 MCM 그래프가 자동 포함됩니다.
+        <div class="tool-card featured">
+            <div class="tool-icon">🔄</div>
+            <div class="tool-name">불확도 역설계</div>
+            <div class="tool-badge first">🌟 세계 최초</div>
+            <div class="tool-desc">
+                목표 불확도에서<br>
+                각 요소의 허용 한계를<br>
+                역으로 산출합니다.
             </div>
         </div>
         """,
         unsafe_allow_html=True,
     )
+    if st.button("🔄 시작하기", key="tool_rev", use_container_width=True):
+        st.switch_page("pages/4_🔄_불확도_역설계.py")
 
-with feature_row2_col2:
+with tool_cols[4]:
     st.markdown(
         """
-        <div class="feature-card">
-            <div class="feature-icon">📊</div>
-            <div class="feature-title">KOLAS 양식 엑셀</div>
-            <div class="feature-desc">
-                KOLAS-G-002 불확도 예산표 양식을
-                자동으로 생성하여 다운로드합니다.
-                심사 제출 전 형식 검토가 끝나있습니다.
+        <div class="tool-card disabled">
+            <div class="tool-icon">🔑</div>
+            <div class="tool-name">AI 심사 컨설팅</div>
+            <div class="tool-badge soon">Phase 5 · 출시 예정</div>
+            <div class="tool-desc">
+                KOLAS 심사 대비<br>
+                셀프 체크 + 전문가 연결.<br>
+                <em>로드맵 진행 중.</em>
             </div>
         </div>
         """,
         unsafe_allow_html=True,
     )
+    st.button("🔑 티저 보기", key="tool_consult", use_container_width=True, disabled=True)
 
-with feature_row2_col3:
-    st.markdown(
-        """
-        <div class="feature-card">
-            <div class="feature-icon">✨</div>
-            <div class="feature-title">위자드 모드</div>
-            <div class="feature-desc">
-                GUM 분류와 표준불확도 입력을 단계별로 안내합니다.
-                비전문가도 정확한 불확도 예산표를 만들 수 있습니다.
-            </div>
-        </div>
-        """,
-        unsafe_allow_html=True,
-    )
-
-st.markdown("")
+st.markdown("&nbsp;")
 
 # ──────────────────────────────────────────
-# 4. Before/After 비교 (NEW)
+# 6. Before/After 비교
 # ──────────────────────────────────────────
 st.markdown("## 📈 Before vs After")
-st.markdown("MetroAI 도입 전후, 작업 효율이 얼마나 개선되는지 확인하세요.")
+st.caption("엑셀 수작업과 MetroAI의 차이.")
 
 comparison_data = [
-    ["구분", "엑셀 수작업", "MetroAI"],
-    ["작업시간", "1~2시간", "5분"],
-    ["오류 위험", "수식 오류 가능 ⚠️", "자동 검증 ✅"],
-    ["MCM 검증", "별도 코딩 필요", "원클릭 ✅"],
-    ["양식 작성", "수동 작성", "KOLAS-G-002 자동 ✅"],
-    ["PT 분석", "수동 계산", "CSV 업로드 자동 ✅"],
-    ["성적서 생성", "레이아웃 조정 필요", "원클릭 PDF ✅"],
-    ["감사 추적", "어려움", "완전 기록 ✅"],
+    ("작업시간", "1~2시간", "5분"),
+    ("오류 위험", "수식 오류 가능 ⚠️", "자동 검증 ✅"),
+    ("MCM 검증", "별도 코딩 필요", "원클릭 ✅"),
+    ("KOLAS 양식", "수동 작성", "KOLAS-G-002 자동 ✅"),
+    ("PT 분석", "수동 계산", "CSV 업로드 자동 ✅"),
+    ("성적서 생성", "레이아웃 조정 필요", "원클릭 PDF ✅"),
+    ("감사 추적", "어려움", "완전 기록 ✅"),
 ]
 
-st.markdown("<table class='comparison-table'>", unsafe_allow_html=True)
-for i, row in enumerate(comparison_data):
-    if i == 0:
-        st.markdown(
-            f"<tr><th>{row[0]}</th><th style='color: #d32f2f;'>{row[1]}</th><th style='color: #388e3c;'>{row[2]}</th></tr>",
-            unsafe_allow_html=True,
-        )
-    else:
-        cell1 = f"<span class='before-cell'>{row[1]}</span>"
-        cell2 = f"<span class='after-cell'>{row[2]}</span>"
-        st.markdown(f"<tr><td><strong>{row[0]}</strong></td><td>{cell1}</td><td>{cell2}</td></tr>", unsafe_allow_html=True)
-st.markdown("</table>", unsafe_allow_html=True)
+table_html = "<table class='comparison-table'>"
+table_html += (
+    "<tr><th>구분</th>"
+    "<th style='color:#d32f2f;'>엑셀 수작업</th>"
+    "<th style='color:#388e3c;'>MetroAI</th></tr>"
+)
+for label, before, after in comparison_data:
+    table_html += (
+        f"<tr><td><strong>{label}</strong></td>"
+        f"<td><span class='before-cell'>{before}</span></td>"
+        f"<td><span class='after-cell'>{after}</span></td></tr>"
+    )
+table_html += "</table>"
+st.markdown(table_html, unsafe_allow_html=True)
 
-st.markdown("")
+st.markdown("&nbsp;")
 
 # ──────────────────────────────────────────
-# 5. 가격표 (개선)
+# 7. 요금제 (축소)
 # ──────────────────────────────────────────
 st.markdown("## 💰 요금제")
-st.markdown("언제든지 업그레이드 또는 다운그레이드할 수 있습니다. 신용카드가 필요하지 않습니다.")
+st.caption("Free로 먼저 체험해보세요. 신용카드 필요 없음.")
 
-pricing_col1, pricing_col2, pricing_col3, pricing_col4 = st.columns(4)
+p1, p2, p3 = st.columns(3)
 
-with pricing_col1:
+with p1:
     st.markdown(
         """
         <div class="pricing-card">
@@ -425,28 +548,26 @@ with pricing_col1:
             <div class="pricing-price">₩0</div>
             <div class="pricing-features">
                 ✓ 불확도 계산 3건/월<br>
-                ✓ PDF 생성<br>
-                ✓ 기본 MCM 검증<br>
-                ✓ 커뮤니티 지원
+                ✓ PDF / 엑셀 다운로드<br>
+                ✓ MCM 검증<br>
+                ✓ 심사 체크리스트
             </div>
         </div>
         """,
         unsafe_allow_html=True,
     )
 
-with pricing_col2:
+with p2:
     st.markdown(
         """
         <div class="pricing-card recommended">
             <div class="pricing-badge">추천</div>
             <div class="pricing-title">Pro</div>
-            <div class="pricing-price">₩29,900</div>
-            <p style="color: #888; font-size: 0.9rem;">월간 결제</p>
+            <div class="pricing-price">₩29,900<span style='font-size:0.9rem;color:#888;'>/월</span></div>
             <div class="pricing-features">
                 ✓ 무제한 계산<br>
-                ✓ PT 분석 포함<br>
-                ✓ 고급 MCM 옵션<br>
-                ✓ KOLAS 양식 엑셀<br>
+                ✓ 역설계 풀 기능<br>
+                ✓ PT 분석 풀 기능<br>
                 ✓ 이메일 지원<br>
                 ✓ 우선 업데이트
             </div>
@@ -455,162 +576,110 @@ with pricing_col2:
         unsafe_allow_html=True,
     )
 
-with pricing_col3:
+with p3:
     st.markdown(
         """
         <div class="pricing-card">
-            <p style="color: #999; font-style: italic;">출시 예정</p>
-            <div class="pricing-title">Team</div>
-            <div class="pricing-price">₩79,900</div>
-            <p style="color: #888; font-size: 0.9rem;">월간 결제</p>
+            <p style="color:#999;font-style:italic;font-size:0.8rem;margin:0 0 0.3rem 0;">출시 예정</p>
+            <div class="pricing-title">Consulting</div>
+            <div class="pricing-price">맞춤</div>
             <div class="pricing-features">
                 ✓ Pro 전체 포함<br>
-                ✓ 다중 사용자 (5명)<br>
-                ✓ 조직 관리<br>
-                ✓ 팀 분석 대시보드<br>
-                ✓ 우선 지원
+                ✓ AI 심사 셀프체크<br>
+                ✓ KOLAS 전문가 연결<br>
+                ✓ 기관 맞춤 컨설팅<br>
+                ✓ Phase 5 예정
             </div>
         </div>
         """,
         unsafe_allow_html=True,
     )
 
-with pricing_col4:
-    st.markdown(
-        """
-        <div class="pricing-card">
-            <p style="color: #999; font-style: italic;">출시 예정</p>
-            <div class="pricing-title">Enterprise</div>
-            <div class="pricing-price">맞춤 가격</div>
-            <p style="color: #888; font-size: 0.9rem;">연간 계약</p>
-            <div class="pricing-features">
-                ✓ Team 전체 포함<br>
-                ✓ REST API 접근<br>
-                ✓ 커스텀 구성<br>
-                ✓ SSO/SAML<br>
-                ✓ 24/7 지원
-            </div>
-        </div>
-        """,
-        unsafe_allow_html=True,
-    )
-
-st.markdown("")
+st.markdown("&nbsp;")
 
 # ──────────────────────────────────────────
-# 6. FAQ (NEW)
+# 8. FAQ
 # ──────────────────────────────────────────
 st.markdown("## ❓ 자주 묻는 질문")
+
+with st.expander("🏛️ KOLAS 인정이 뭔가요?", expanded=False):
+    st.markdown(
+        """
+        **KOLAS (Korea Laboratory Accreditation Scheme)** 는 한국인정기구(KAB)가 운영하는
+        **ISO/IEC 17025** 기반의 시험·교정 기관 인정 제도입니다.
+
+        - **적용 대상:** 교정기관, 시험기관, 표준물질 생산기관, 숙련도시험 운영기관, 의료시험기관
+        - **인정 표준:** ISO/IEC 17025 (시험·교정 기관의 적격성 요구사항)
+        - **심사 절차:** 신청 → 서류심사 → 현장평가 → 인정서 발급 (평균 6~12개월)
+        - **재심사:** 4년 주기 (정기 감시평가는 매년)
+
+        MetroAI는 이 과정에서 가장 어려운 **불확도 예산표 작성, 교정성적서 생성, PT 분석**을 자동화합니다.
+        """
+    )
 
 with st.expander("🔬 GUM이 뭔가요?", expanded=False):
     st.markdown(
         """
-        **GUM (Guide to the Expression of Uncertainty in Measurement)**은
-        **ISO/IEC Guide 98-3** 표준으로, 측정 결과의 불확도를 표현하는 국제 표준입니다.
+        **GUM (Guide to the Expression of Uncertainty in Measurement)** — ISO/IEC Guide 98-3.
+        측정 결과의 불확도를 표현하는 국제 표준입니다.
 
-        - **불확도란?** 측정값이 참값으로부터 벗어날 수 있는 범위
-        - **A형 불확도:** 반복 측정으로 산출 (표준편차)
-        - **B형 불확도:** 교정성적서, 기기 사양 등에서 유추
-        - **합성불확도:** A형과 B형을 합성한 전체 불확도
-        - **확장불확도:** 신뢰도 95% 수준의 범위 (합성불확도 × k)
+        - **A형 불확도:** 반복 측정 통계 (표준편차)
+        - **B형 불확도:** 교정성적서, 기기 사양, 경험 등에서 유추
+        - **합성불확도 uc:** A형 + B형 합성 (불확도 전파)
+        - **확장불확도 U:** 신뢰도 95% 수준 (uc × 포함인자 k, 보통 k≈2)
 
-        MetroAI는 이 모든 과정을 자동화하므로 GUM의 세부 내용을 모르셔도 괜찮습니다.
-        위자드 모드가 단계별로 안내해줍니다.
+        MetroAI는 이 모든 과정을 자동화하므로 GUM 세부 내용을 몰라도 괜찮습니다.
         """
     )
 
-with st.expander("✅ KOLAS 심사에 사용 가능한가요?", expanded=False):
+with st.expander("✅ MetroAI 결과를 KOLAS 심사에 그대로 제출할 수 있나요?", expanded=False):
     st.markdown(
         """
-        **네, 완벽히 지원합니다.**
+        **네, 설계부터 KOLAS 심사 제출용으로 만들어졌습니다.**
 
-        MetroAI는:
-        - ✓ **GUM 준거:** ISO/IEC Guide 98-3 기반 계산
-        - ✓ **KOLAS-G-002 양식:** KOLAS 불확도 예산표 자동 생성
+        - ✓ **GUM 준거 계산:** ISO/IEC Guide 98-3 표준 수식 구현
         - ✓ **MCM 검증:** GUM Supplement 1 기반 몬테카를로 시뮬레이션
-        - ✓ **감사 추적:** 모든 계산 과정 기록 및 재현 가능
+        - ✓ **KOLAS-G-002 양식:** 불확도 예산표 자동 포맷
+        - ✓ **감사 추적:** 모든 입력값·계산 과정 재현 가능
 
-        심사관들이 요구하는 모든 근거 자료를 MetroAI가 자동으로 생성하므로,
-        심사 준비 시 신뢰성 높은 자료로 사용 가능합니다.
-
-        실제로 KOLAS 심사 경험이 있는 고객들이 MetroAI를 추천하고 있습니다.
+        다만 기관별 세부 포맷(로고, 서명란 위치 등)은 조직에서 직접 조정이 필요할 수 있습니다.
         """
     )
 
 with st.expander("🏭 어떤 교정 분야를 지원하나요?", expanded=False):
     st.markdown(
         """
-        **현재 지원 중인 분야:**
-        - 길이 측정 (블록게이지, 게이지블록)
-        - 질량 측정 (분동, 저울)
-        - 온도 측정 (온도계, 써모커플)
-        - 압력 측정 (압력계, 진공게이지)
+        **현재 지원:** 길이(블록게이지), 질량(분동), 온도(온도계), 압력(압력계)
+        **곧 추가:** 전기(전압/전류/저항), 시간·주파수, 습도·이슬점
 
-        **곧 추가될 분야:**
-        - 전기 (전압, 전류, 저항)
-        - 시간/주파수
-        - 습도/이슬점
-
-        필요한 분야가 있으시면 고객 피드백으로 우선순위를 정하고 있습니다.
-        kyb8801@gmail.com으로 문의하세요.
-        """
-    )
-
-with st.expander("🎲 MCM 검증이 왜 필요한가요?", expanded=False):
-    st.markdown(
-        """
-        **MCM (Monte Carlo Method)은 GUM 계산의 신뢰성을 검증합니다.**
-
-        GUM은:
-        - ✓ 선형 모델에 강함
-        - ✗ 비선형 모델에서 오차 가능
-
-        MCM은:
-        - ✓ GUM Supplement 1 권고사항
-        - ✓ 모든 분포(정규분포, 균등분포 등)에 적용 가능
-        - ✓ 비선형 모델도 정확히 처리
-
-        MetroAI는 자동으로 GUM 계산과 MCM을 동시에 수행하고,
-        두 결과를 비교하여 일치도를 표시합니다.
-
-        심사관들이 "MCM으로도 검증했나요?"라는 질문을 자주 하는데,
-        MetroAI를 사용하면 이 질문에 즉시 답변할 수 있습니다.
+        필요한 분야가 있으시면 **kyb8801@gmail.com** 으로 알려주세요. 우선순위에 반영합니다.
         """
     )
 
 with st.expander("💳 무료 플랜의 제한사항은?", expanded=False):
     st.markdown(
         """
-        **Free 플랜:**
-        - 월 3건까지 계산 가능
-        - 모든 기능 사용 가능 (제한 없음)
-        - PDF + 엑셀 다운로드 가능
-        - MCM 검증 포함
+        **Free:** 월 3건 계산 + 모든 기능 사용 가능 (PDF/엑셀/MCM/체크리스트 포함)
+        **Pro:** 무제한 계산 + 우선 지원 + 월 ₩29,900
+        **Consulting:** Phase 5에서 출시 예정
 
-        **Pro 플랜으로 업그레이드하면:**
-        - 무제한 계산
-        - 우선 지원
-        - 신규 기능 우선 제공
-        - 월 ₩29,900
-
-        언제든 업그레이드/다운그레이드할 수 있으며, 신용카드가 필요하지 않습니다.
+        신용카드 없이 바로 시작할 수 있으며, 언제든 업/다운그레이드 가능합니다.
         """
     )
 
-st.markdown("")
+st.markdown("&nbsp;")
 
 # ──────────────────────────────────────────
-# 7. 푸터 (개선)
+# 9. 푸터
 # ──────────────────────────────────────────
 st.markdown(
     """
     <div class="footer-content">
-        <strong>MetroAI v0.2.0</strong><br>
-        GUM (ISO/IEC Guide 98-3) 준거 | KOLAS-G-002 양식 지원<br>
-        GUM Supplement 1 기반 MCM 검증<br><br>
-        📧 문의: <strong>kyb8801@gmail.com</strong><br>
-        🏢 한국 KOLAS 인정 교정기관 전용<br>
-        © 2025 MetroAI. All rights reserved.
+        <strong>MetroAI v0.5.0</strong> &nbsp;·&nbsp;
+        ISO/IEC 17025 · GUM · KOLAS-G-002 준거<br>
+        📧 <strong>kyb8801@gmail.com</strong> &nbsp;·&nbsp;
+        한국 KOLAS 인정 교정·시험기관 전용<br>
+        © 2026 MetroAI. All rights reserved.
     </div>
     """,
     unsafe_allow_html=True,

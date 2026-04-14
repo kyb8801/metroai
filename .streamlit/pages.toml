@@ -1,0 +1,29 @@
+[[pages]]
+path = "app.py"
+name = "홈"
+icon = "🏠"
+
+[[pages]]
+path = "pages/1_📐_불확도_계산.py"
+name = "불확도 계산"
+icon = "📐"
+
+[[pages]]
+path = "pages/2_📊_PT_분석.py"
+name = "PT 분석"
+icon = "📊"
+
+[[pages]]
+path = "pages/3_📄_교정성적서.py"
+name = "교정성적서"
+icon = "📄"
+
+[[pages]]
+path = "pages/4_🔄_불확도_역설계.py"
+name = "불확도 역설계"
+icon = "🔄"
+
+[[pages]]
+path = "pages/5_🔑_관리자.py"
+name = "관리자"
+icon = "🔑"

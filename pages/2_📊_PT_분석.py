@@ -22,7 +22,45 @@ st.set_page_config(
 st.header("📊 숙련도시험(PT) 분석")
 st.markdown("ISO 13528 / ISO 17043 기반 z-score, En number, ζ-score 자동 판정")
 
+# ──────────────────────────────────────────
+# 초보자 가이드 (NEW — v0.5.0)
+# ──────────────────────────────────────────
+with st.expander("💡 **숙련도시험(PT)이란? — 처음이신 분 클릭**", expanded=False):
+    st.markdown(
+        """
+        **KOLAS 인정기관은 정기적으로 숙련도시험(PT)에 참가해야 합니다.**
+
+        쉽게 말하면: 같은 시료를 여러 기관이 측정하고,
+        **우리 기관의 결과가 다른 기관들과 얼마나 일치하는지** 확인하는 것입니다.
+
+        ---
+
+        **📌 판정 기준 요약:**
+
+        | 지표 | 계산 방식 | 판정 |
+        |------|-----------|------|
+        | **z-score** | (우리 측정값 − 배정값) ÷ σ_pt | \\|z\\| < 2: 만족, 2~3: 주의, > 3: 불만족 |
+        | **En number** | (우리 측정값 − 배정값) ÷ √(U_lab² + U_ref²) | \\|En\\| < 1: 적합 |
+        | **ζ-score** | (우리 측정값 − 배정값) ÷ √(u_lab² + u_ref²) | \\|ζ\\| < 2: 적합 |
+
+        ---
+
+        **📋 어디서 입력값을 찾나요?**
+        - PT 운영기관(KASTO 등)에서 보내주는 **PT 결과 보고서**에 모든 값이 있습니다
+        - **우리 기관 측정값, 배정값**: 보고서 표지 또는 결과 요약표
+        - **σ_pt**: "숙련도 평가용 표준편차"라는 이름으로 기재
+        - **U_lab**: 우리 기관이 제출한 확장불확도
+        - **U_ref**: 기준값의 확장불확도 (없으면 0으로 두세요)
+        """
+    )
+
+    if st.button("📝 예시 데이터로 체험하기", key="pt_example"):
+        st.session_state["pt_example_loaded"] = True
+
 st.divider()
+
+# 예시 데이터 로드 여부
+_use_example = st.session_state.get("pt_example_loaded", False)
 
 input_mode = st.radio("입력 방식", ["단건 입력", "CSV 업로드"], horizontal=True)
 
@@ -31,14 +69,39 @@ if input_mode == "단건 입력":
 
     with col1:
         st.markdown("**필수 입력**")
-        lab_value = st.number_input("참가기관 측정값 (x)", value=50.001, format="%.6g")
-        assigned_value = st.number_input("배정값 (X)", value=50.000, format="%.6g")
+        lab_value = st.number_input(
+            "참가기관 측정값 (x)",
+            value=50.012 if _use_example else 50.001,
+            format="%.6g",
+            help="PT 결과서에서 우리 기관이 보고한 측정값",
+        )
+        assigned_value = st.number_input(
+            "배정값 (X)",
+            value=50.000,
+            format="%.6g",
+            help="PT 운영기관이 결정한 기준값 (결과서에 'assigned value'로 표기)",
+        )
 
     with col2:
-        st.markdown("**선택 입력**")
-        sigma_pt = st.number_input("σ_pt (z-score용)", value=0.0, format="%.6g", help="0이면 z-score 미계산")
-        U_lab = st.number_input("참가기관 확장불확도 U_lab", value=0.0, format="%.6g", help="0이면 En/ζ 미계산")
-        U_ref = st.number_input("기준값 확장불확도 U_ref", value=0.0, format="%.6g")
+        st.markdown("**선택 입력** _(PT 결과서에 있으면 입력)_")
+        sigma_pt = st.number_input(
+            "σ_pt (z-score용)",
+            value=0.015 if _use_example else 0.0,
+            format="%.6g",
+            help="숙련도 평가용 표준편차. 결과서에 없으면 0으로 두세요.",
+        )
+        U_lab = st.number_input(
+            "참가기관 확장불확도 U_lab",
+            value=0.020 if _use_example else 0.0,
+            format="%.6g",
+            help="우리 기관이 보고한 확장불확도. 0이면 En/ζ 미계산.",
+        )
+        U_ref = st.number_input(
+            "기준값 확장불확도 U_ref",
+            value=0.005 if _use_example else 0.0,
+            format="%.6g",
+            help="기준값의 확장불확도 (없으면 0)",
+        )
         k_val = st.number_input("포함인자 k", value=2.0)
 
     if st.button("📊 분석 실행", type="primary", use_container_width=True):
