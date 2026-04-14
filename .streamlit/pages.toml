@@ -37,3 +37,8 @@ icon = "🗺️"
 path = "pages/7_📖_용어사전.py"
 name = "용어사전"
 icon = "📖"
+
+[[pages]]
+path = "pages/8_✅_심사_셀프체크.py"
+name = "심사 셀프체크"
+icon = "✅"
