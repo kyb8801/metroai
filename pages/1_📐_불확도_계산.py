@@ -258,11 +258,12 @@ with st.sidebar:
 
     mode = st.radio(
         "모드 선택",
-        ["🔧 템플릿 사용", "✏️ 직접 입력", "🧙 위자드 모드"],
+        ["🎯 단계별 안내 (추천)", "🔧 템플릿", "✏️ 직접 입력", "🧙 고급 위자드"],
         index=0,
+        help="처음이시면 '단계별 안내'를 선택하세요.",
     )
 
-    if mode == "🔧 템플릿 사용":
+    if mode == "🔧 템플릿":
         template = st.selectbox(
             "교정 분야",
             [
@@ -275,7 +276,7 @@ with st.sidebar:
 
     st.divider()
     st.markdown(
-        "**MetroAI v0.1.0**\n\n"
+        "**MetroAI v0.5.0**\n\n"
         "GUM (ISO/IEC Guide 98-3) 준거\n\n"
         "KOLAS-G-002 양식 지원"
     )
@@ -287,50 +288,446 @@ with st.sidebar:
 st.header("측정불확도 예산표 작성")
 
 # ──────────────────────────────────────────
-# 초보자 가이드 진입점 (NEW — v0.5.0)
+# 단계별 안내 모드 (NEW — v0.5.0, UX 플랜 #7)
 # ──────────────────────────────────────────
-with st.expander("💡 **처음이신가요? — 측정 대상부터 알려주세요**", expanded=False):
-    st.markdown(
-        """
-        MetroAI가 측정 대상에 맞는 템플릿과 기본값을 자동으로 설정해드립니다.
-        GUM이나 불확도 계산을 모르셔도 괜찮습니다. 아래에서 하나를 선택하세요.
-        """
+if mode == "🎯 단계별 안내 (추천)":
+
+    # 세션 상태 초기화
+    if "step_current" not in st.session_state:
+        st.session_state.step_current = 1
+    if "step_category" not in st.session_state:
+        st.session_state.step_category = None
+
+    # ─── Step 진행 표시 ───
+    step = st.session_state.step_current
+    step_labels = ["❶ 측정 대상", "❷ 핵심 정보", "❸ 환경·부가", "❹ 요약·계산"]
+    progress_text = " → ".join(
+        [f"**{lbl}**" if i + 1 == step else lbl for i, lbl in enumerate(step_labels)]
     )
+    st.markdown(f"📍 {progress_text}")
+    st.progress(step / 4)
 
-    guide_col1, guide_col2 = st.columns(2)
-    with guide_col1:
-        st.markdown(
-            """
-            **📏 길이 측정** (블록게이지, 마이크로미터)
-            - 표준기 교정 불확도 + 반복 측정값만 있으면 시작 가능
-            - 온도/열팽창계수 등은 자동 기본값 (20±0.5°C)
+    # ═══════════════════════════════════════
+    # Step 1: 뭘 측정하나요?
+    # ═══════════════════════════════════════
+    if step == 1:
+        st.subheader("Step 1 — 뭘 측정하시나요?")
+        st.caption("교정 분야를 선택하면 맞는 파라미터를 자동으로 안내해드립니다.")
 
-            **⚖️ 질량 측정** (분동, 저울)
-            - 표준분동 불확도 + 반복 측정값 + 분해능
-            - 부력 보정은 기본값 자동 설정
-            """
-        )
-    with guide_col2:
-        st.markdown(
-            """
-            **🌡️ 온도 측정** (온도계, 써모커플)
-            - 표준기 불확도 + 반복 측정값 + 안정도/균일도
+        cat_cols = st.columns(4)
+        categories = [
+            ("📏", "길이", "블록게이지, 마이크로미터,\n게이지블록 비교 교정"),
+            ("⚖️", "질량", "분동, 저울,\n질량 비교 교정"),
+            ("🌡️", "온도", "온도계, 써모커플,\n항온조 교정"),
+            ("🔧", "압력", "압력계, 진공게이지,\n분동식 압력계"),
+        ]
 
-            **🔧 압력 측정** (압력계, 진공게이지)
-            - 표준기 불확도 + 반복 측정값 + 분해능
+        for i, (icon, name, desc) in enumerate(categories):
+            with cat_cols[i]:
+                st.markdown(
+                    f"""
+                    <div style="text-align:center; padding:1.5rem 0.5rem; background:#f8f9ff;
+                    border-radius:10px; border:1px solid #dde;">
+                        <div style="font-size:2.5rem;">{icon}</div>
+                        <div style="font-size:1.1rem; font-weight:700; margin:0.3rem 0;">{name}</div>
+                        <div style="font-size:0.8rem; color:#666;">{desc}</div>
+                    </div>
+                    """,
+                    unsafe_allow_html=True,
+                )
+                if st.button(f"{name} 선택", key=f"step1_{name}", use_container_width=True):
+                    st.session_state.step_category = name
+                    st.session_state.step_current = 2
+                    st.rerun()
 
-            **🧪 직접 구성** — 위 분야에 없으면 "직접 입력" 또는 "위자드 모드" 선택
-            """
-        )
+    # ═══════════════════════════════════════
+    # Step 2: 핵심 정보 (반복 측정 + 표준기)
+    # ═══════════════════════════════════════
+    elif step == 2:
+        cat = st.session_state.step_category
 
-    st.info("💬 **기본값으로 설정된 항목**은 결과에 표시되며, 나중에 **불확도 역설계** 페이지에서 이 기본값이 결과에 얼마나 영향을 미치는지 확인할 수 있습니다.")
-    st.caption("👈 왼쪽 사이드바에서 교정 분야(템플릿)를 선택해주세요.")
+        st.subheader(f"Step 2 — {cat} 교정: 핵심 정보 입력")
+        st.caption("교정성적서와 반복 측정 데이터만 있으면 됩니다. 나머지는 기본값으로 자동 설정됩니다.")
+
+        if cat == "길이":
+            st.markdown("**📏 블록게이지 비교 교정**")
+            st.markdown("측정 모델: `L = dL + d_std + (α_s − α_x) × L_s × ΔT`")
+            st.divider()
+
+            st.markdown("**1. 기본 파라미터**")
+            step_nominal = st.number_input("공칭 길이 (mm)", value=50.0, step=1.0, format="%.1f", key="step_gb_nom",
+                                           help="교정 대상 블록게이지의 공칭 길이")
+
+            st.markdown("**2. 표준기 정보** _(교정성적서에서 확인)_")
+            c1, c2 = st.columns(2)
+            with c1:
+                step_U = st.number_input("표준기 확장불확도 U (μm)", value=0.05, format="%.4f", key="step_gb_U",
+                                         help="교정성적서에 적힌 확장불확도(U) 값")
+            with c2:
+                step_k = st.number_input("포함인자 k", value=2.0, format="%.1f", key="step_gb_k",
+                                         help="교정성적서에 적힌 k 값 (보통 2)")
+
+            st.markdown("**3. 반복 측정 데이터 (μm)**")
+            step_readings = st.text_input("쉼표로 구분 입력", value="0.10, 0.12, 0.08, 0.11, 0.09", key="step_gb_read",
+                                          help="비교기로 측정한 편차값을 쉼표로 구분하여 입력")
+
+        elif cat == "질량":
+            st.markdown("**⚖️ 분동 교정**")
+            st.markdown("측정 모델: `m = dm_d + d_std + dm_b + dm_a`")
+            st.divider()
+
+            st.markdown("**1. 기본 파라미터**")
+            step_nominal = st.number_input("공칭 질량 (g)", value=100.0, step=10.0, key="step_m_nom")
+
+            st.markdown("**2. 표준분동 정보** _(교정성적서에서 확인)_")
+            c1, c2 = st.columns(2)
+            with c1:
+                step_U = st.number_input("표준분동 확장불확도 U (mg)", value=0.05, format="%.4f", key="step_m_U")
+            with c2:
+                step_k = st.number_input("포함인자 k", value=2.0, key="step_m_k")
+
+            st.markdown("**3. 반복 측정 데이터 (mg)**")
+            step_readings = st.text_input("쉼표로 구분 입력", value="0.010, 0.012, 0.008, 0.011, 0.009", key="step_m_read")
+
+        elif cat == "온도":
+            st.markdown("**🌡️ 온도계 교정**")
+            st.markdown("측정 모델: `T = dT_ind + d_std + dT_stab + dT_uni + dT_res`")
+            st.divider()
+
+            st.markdown("**1. 표준온도계 정보** _(교정성적서에서 확인)_")
+            c1, c2 = st.columns(2)
+            with c1:
+                step_U = st.number_input("표준온도계 확장불확도 U (°C)", value=0.02, format="%.4f", key="step_t_U")
+            with c2:
+                step_k = st.number_input("포함인자 k", value=2.0, key="step_t_k")
+
+            st.markdown("**2. 반복 측정 데이터 (°C)**")
+            step_readings = st.text_input("쉼표로 구분 입력", value="0.01, 0.02, -0.01, 0.00, 0.01", key="step_t_read")
+
+        elif cat == "압력":
+            st.markdown("**🔧 압력계 교정**")
+            st.markdown("측정 모델: `P = dP_ind + d_std + dP_res + dP_hyst + dP_zero`")
+            st.divider()
+
+            st.markdown("**1. 표준기 정보** _(교정성적서에서 확인)_")
+            c1, c2 = st.columns(2)
+            with c1:
+                step_U = st.number_input("표준기 확장불확도 U (MPa)", value=0.002, format="%.4f", key="step_p_U")
+            with c2:
+                step_k = st.number_input("포함인자 k", value=2.0, key="step_p_k")
+
+            st.markdown("**2. 반복 측정 데이터 (MPa)**")
+            step_readings = st.text_input("쉼표로 구분 입력", value="0.001, 0.002, -0.001, 0.000, 0.001", key="step_p_read")
+
+        # 네비게이션
+        nav_c1, nav_c2 = st.columns(2)
+        with nav_c1:
+            if st.button("◀ 이전", use_container_width=True, key="step2_back"):
+                st.session_state.step_current = 1
+                st.rerun()
+        with nav_c2:
+            if st.button("다음 ▶ (환경 조건 확인)", type="primary", use_container_width=True, key="step2_next"):
+                st.session_state.step_current = 3
+                st.rerun()
+
+    # ═══════════════════════════════════════
+    # Step 3: 환경·부가 파라미터 (기본값 제공)
+    # ═══════════════════════════════════════
+    elif step == 3:
+        cat = st.session_state.step_category
+
+        st.subheader(f"Step 3 — 환경 및 부가 파라미터")
+        st.info("💡 **모르면 기본값 그대로 두세요.** 기본값이 결과에 미치는 영향은 불확도 역설계에서 확인할 수 있습니다.")
+
+        if cat == "길이":
+            c1, c2 = st.columns(2)
+            with c1:
+                step_temp_unc = st.number_input("온도 불확도 반폭 (°C)", value=0.5, format="%.1f", key="step_gb_temp",
+                                                help="⚠️ 기본값: ±0.5°C (표준 실험실)")
+                step_alpha = st.number_input("열팽창계수 불확도 (/°C)", value=1.0e-6, format="%.1e", key="step_gb_alpha",
+                                             help="⚠️ 기본값: 1.0×10⁻⁶/°C (강/철 기준)")
+            with c2:
+                step_temp_dev = st.number_input("온도 편차 ΔT (°C)", value=0.0, format="%.1f", key="step_gb_dt",
+                                                help="⚠️ 기본값: 0°C (20°C 기준에서 편차 없음)")
+            st.caption("⚠️ 위 항목은 모두 **기본값**입니다. 특수한 측정 환경이 아니면 그대로 두셔도 됩니다.")
+
+        elif cat == "질량":
+            c1, c2 = st.columns(2)
+            with c1:
+                step_res = st.number_input("저울 분해능 (mg)", value=0.001, format="%.4f", key="step_m_res",
+                                           help="⚠️ 기본값: 0.001 mg")
+            with c2:
+                step_buoy = st.number_input("부력 보정 불확도 (mg)", value=0.001, format="%.4f", key="step_m_buoy",
+                                            help="⚠️ 기본값: 0.001 mg (상온, 표준 대기압)")
+            st.caption("⚠️ 위 항목은 모두 **기본값**입니다.")
+
+        elif cat == "온도":
+            c1, c2, c3 = st.columns(3)
+            with c1:
+                step_stab = st.number_input("항온조 안정도 (°C)", value=0.02, format="%.3f", key="step_t_stab",
+                                            help="⚠️ 기본값: ±0.02°C")
+            with c2:
+                step_uni = st.number_input("항온조 균일도 (°C)", value=0.05, format="%.3f", key="step_t_uni",
+                                           help="⚠️ 기본값: ±0.05°C")
+            with c3:
+                step_t_res = st.number_input("온도계 분해능 (°C)", value=0.01, format="%.3f", key="step_t_res",
+                                             help="⚠️ 기본값: 0.01°C")
+            st.caption("⚠️ 위 항목은 모두 **기본값**입니다.")
+
+        elif cat == "압력":
+            c1, c2, c3 = st.columns(3)
+            with c1:
+                step_p_res = st.number_input("압력계 분해능 (MPa)", value=0.001, format="%.4f", key="step_p_res",
+                                             help="⚠️ 기본값")
+            with c2:
+                step_hyst = st.number_input("이력차 (MPa)", value=0.002, format="%.4f", key="step_p_hyst",
+                                            help="⚠️ 기본값: ±0.002 MPa")
+            with c3:
+                step_zero = st.number_input("영점 드리프트 (MPa)", value=0.001, format="%.4f", key="step_p_zero",
+                                            help="⚠️ 기본값: ±0.001 MPa")
+            st.caption("⚠️ 위 항목은 모두 **기본값**입니다.")
+
+        nav_c1, nav_c2 = st.columns(2)
+        with nav_c1:
+            if st.button("◀ 이전", use_container_width=True, key="step3_back"):
+                st.session_state.step_current = 2
+                st.rerun()
+        with nav_c2:
+            if st.button("다음 ▶ (요약 확인)", type="primary", use_container_width=True, key="step3_next"):
+                st.session_state.step_current = 4
+                st.rerun()
+
+    # ═══════════════════════════════════════
+    # Step 4: 요약 + 계산
+    # ═══════════════════════════════════════
+    elif step == 4:
+        cat = st.session_state.step_category
+
+        st.subheader("Step 4 — 요약 확인 및 계산")
+
+        # 각 분야별로 요약 표시 + 계산 실행
+        if cat == "길이":
+            nom = st.session_state.get("step_gb_nom", 50.0)
+            U = st.session_state.get("step_gb_U", 0.05)
+            k = st.session_state.get("step_gb_k", 2.0)
+            readings_str = st.session_state.get("step_gb_read", "0.10, 0.12, 0.08, 0.11, 0.09")
+            temp_unc = st.session_state.get("step_gb_temp", 0.5)
+            alpha = st.session_state.get("step_gb_alpha", 1.0e-6)
+            temp_dev = st.session_state.get("step_gb_dt", 0.0)
+
+            try:
+                readings = [float(x.strip()) for x in readings_str.split(",") if x.strip()]
+            except ValueError:
+                readings = [0.10, 0.12, 0.08, 0.11, 0.09]
+
+            # 기본값 확인
+            defaults_used = []
+            if temp_unc == 0.5:
+                defaults_used.append("온도 불확도 반폭 (0.5°C)")
+            if alpha == 1.0e-6:
+                defaults_used.append("열팽창계수 불확도 (1.0×10⁻⁶/°C)")
+            if temp_dev == 0.0:
+                defaults_used.append("온도 편차 (0°C)")
+
+            st.markdown(
+                f"""
+                | 항목 | 값 |
+                |------|-----|
+                | **측정 대상** | 블록게이지 비교 교정 |
+                | **공칭 길이** | {nom} mm |
+                | **표준기 확장불확도 U** | {U} μm (k={k}) |
+                | **반복 측정** | {len(readings)}회 |
+                | **환경** | ±{temp_unc}°C, ΔT={temp_dev}°C |
+                """
+            )
+
+            if defaults_used:
+                st.warning(f"⚠️ **기본값으로 설정된 항목 ({len(defaults_used)}개):** {', '.join(defaults_used)}\n\n→ 계산 후 **불확도 역설계** 페이지에서 이 기본값들이 결과에 미치는 영향을 확인할 수 있습니다.")
+
+        elif cat == "질량":
+            nom = st.session_state.get("step_m_nom", 100.0)
+            U = st.session_state.get("step_m_U", 0.05)
+            k = st.session_state.get("step_m_k", 2.0)
+            readings_str = st.session_state.get("step_m_read", "0.010, 0.012, 0.008, 0.011, 0.009")
+            res = st.session_state.get("step_m_res", 0.001)
+            buoy = st.session_state.get("step_m_buoy", 0.001)
+
+            try:
+                readings = [float(x.strip()) for x in readings_str.split(",") if x.strip()]
+            except ValueError:
+                readings = [0.010, 0.012, 0.008, 0.011, 0.009]
+
+            defaults_used = []
+            if res == 0.001:
+                defaults_used.append("저울 분해능 (0.001 mg)")
+            if buoy == 0.001:
+                defaults_used.append("부력 보정 (0.001 mg)")
+
+            st.markdown(
+                f"""
+                | 항목 | 값 |
+                |------|-----|
+                | **측정 대상** | 분동 교정 |
+                | **공칭 질량** | {nom} g |
+                | **표준분동 U** | {U} mg (k={k}) |
+                | **반복 측정** | {len(readings)}회 |
+                """
+            )
+            if defaults_used:
+                st.warning(f"⚠️ **기본값 ({len(defaults_used)}개):** {', '.join(defaults_used)}")
+
+        elif cat == "온도":
+            U = st.session_state.get("step_t_U", 0.02)
+            k = st.session_state.get("step_t_k", 2.0)
+            readings_str = st.session_state.get("step_t_read", "0.01, 0.02, -0.01, 0.00, 0.01")
+            stab = st.session_state.get("step_t_stab", 0.02)
+            uni = st.session_state.get("step_t_uni", 0.05)
+            t_res = st.session_state.get("step_t_res", 0.01)
+
+            try:
+                readings = [float(x.strip()) for x in readings_str.split(",") if x.strip()]
+            except ValueError:
+                readings = [0.01, 0.02, -0.01, 0.00, 0.01]
+
+            defaults_used = []
+            if stab == 0.02:
+                defaults_used.append("안정도 (0.02°C)")
+            if uni == 0.05:
+                defaults_used.append("균일도 (0.05°C)")
+            if t_res == 0.01:
+                defaults_used.append("분해능 (0.01°C)")
+
+            st.markdown(
+                f"""
+                | 항목 | 값 |
+                |------|-----|
+                | **측정 대상** | 온도계 교정 |
+                | **표준온도계 U** | {U} °C (k={k}) |
+                | **반복 측정** | {len(readings)}회 |
+                """
+            )
+            if defaults_used:
+                st.warning(f"⚠️ **기본값 ({len(defaults_used)}개):** {', '.join(defaults_used)}")
+
+        elif cat == "압력":
+            U = st.session_state.get("step_p_U", 0.002)
+            k = st.session_state.get("step_p_k", 2.0)
+            readings_str = st.session_state.get("step_p_read", "0.001, 0.002, -0.001, 0.000, 0.001")
+            p_res = st.session_state.get("step_p_res", 0.001)
+            hyst = st.session_state.get("step_p_hyst", 0.002)
+            zero = st.session_state.get("step_p_zero", 0.001)
+
+            try:
+                readings = [float(x.strip()) for x in readings_str.split(",") if x.strip()]
+            except ValueError:
+                readings = [0.001, 0.002, -0.001, 0.000, 0.001]
+
+            defaults_used = []
+            if p_res == 0.001:
+                defaults_used.append("분해능 (0.001 MPa)")
+            if hyst == 0.002:
+                defaults_used.append("이력차 (0.002 MPa)")
+            if zero == 0.001:
+                defaults_used.append("영점 드리프트 (0.001 MPa)")
+
+            st.markdown(
+                f"""
+                | 항목 | 값 |
+                |------|-----|
+                | **측정 대상** | 압력계 교정 |
+                | **표준기 U** | {U} MPa (k={k}) |
+                | **반복 측정** | {len(readings)}회 |
+                """
+            )
+            if defaults_used:
+                st.warning(f"⚠️ **기본값 ({len(defaults_used)}개):** {', '.join(defaults_used)}")
+
+        st.divider()
+
+        nav_c1, nav_c2, nav_c3 = st.columns([1, 1, 2])
+        with nav_c1:
+            if st.button("◀ 환경 조건 수정", use_container_width=True, key="step4_back"):
+                st.session_state.step_current = 3
+                st.rerun()
+        with nav_c2:
+            if st.button("◀◀ 처음부터", use_container_width=True, key="step4_reset"):
+                st.session_state.step_current = 1
+                st.session_state.step_category = None
+                st.rerun()
+
+        with nav_c3:
+            if st.button("🚀 불확도 계산 실행", type="primary", use_container_width=True, key="step4_calc"):
+                can_proceed, msg = check_and_track_calculation(st.session_state.username)
+                if not can_proceed:
+                    st.error(msg)
+                else:
+                    with st.spinner("GUM 불확도 전파 계산 중..."):
+                        if cat == "길이":
+                            model, sources, config = create_gauge_block_template(
+                                nominal_length_mm=nom,
+                                comparator_readings=readings,
+                                std_cert_uncertainty_um=U,
+                                std_cert_k=k,
+                                alpha_uncertainty=alpha,
+                                temp_deviation_C=temp_dev,
+                                temp_uncertainty_C=temp_unc,
+                            )
+                        elif cat == "질량":
+                            model, sources, config = create_mass_template(
+                                nominal_mass_g=nom,
+                                std_cert_U=U,
+                                std_cert_k=k,
+                                readings_mg=readings,
+                                resolution_mg=res,
+                                buoyancy_unc_mg=buoy,
+                            )
+                        elif cat == "온도":
+                            model, sources, config = create_temperature_template(
+                                readings_deviation=readings,
+                                std_cert_U=U,
+                                std_cert_k=k,
+                                bath_stability=stab,
+                                bath_uniformity=uni,
+                                resolution=t_res,
+                            )
+                        elif cat == "압력":
+                            model, sources, config = create_pressure_template(
+                                readings_deviation=readings,
+                                std_cert_U=U,
+                                std_cert_k=k,
+                                resolution=p_res,
+                                hysteresis=hyst,
+                                zero_drift=zero,
+                            )
+
+                        calc = GUMCalculator(
+                            model, sources,
+                            measurand_name=config["measurand_name"],
+                            measurand_unit=config["measurand_unit"],
+                        )
+                        result = calc.calculate()
+
+                    if st.session_state.get("username"):
+                        increment_calculation_usage(st.session_state.username)
+
+                    show_results(result, model, sources, config)
+
+                    # 역설계 연결
+                    if defaults_used:
+                        st.divider()
+                        st.markdown("### 🔄 기본값 영향 분석")
+                        st.info(
+                            f"**기본값으로 설정된 항목 ({len(defaults_used)}개)**이 결과에 얼마나 영향을 미치는지 확인하세요.\n\n"
+                            "→ **불확도 역설계** 페이지에서 각 기본값 요소의 허용 한계를 자동 산출할 수 있습니다."
+                        )
+                        if st.button("🔄 불확도 역설계로 이동", key="goto_reverse"):
+                            st.switch_page("pages/4_🔄_불확도_역설계.py")
 
 
 # ──────────────────────────────────────────
 # 템플릿 모드
 # ──────────────────────────────────────────
-if mode == "🔧 템플릿 사용":
+elif mode == "🔧 템플릿":
 
     if template == "길이 — 블록게이지 비교 교정":
         st.subheader("📏 블록게이지 비교 교정")
@@ -492,6 +889,7 @@ if mode == "🔧 템플릿 사용":
 # 직접 입력 모드
 # ──────────────────────────────────────────
 elif mode == "✏️ 직접 입력":
+    # ──── 직접 입력 모드 (기존) ────
     st.subheader("✏️ 사용자 정의 측정 모델")
 
     model_expr = st.text_input("측정 모델 수학식", value="a + b + c", help="Python/sympy 문법. 예: a + b, a * b, a**2 + b/c")
@@ -583,7 +981,7 @@ elif mode == "✏️ 직접 입력":
 # ──────────────────────────────────────────
 # 위자드 모드
 # ──────────────────────────────────────────
-elif mode == "🧙 위자드 모드":
+elif mode == "🧙 고급 위자드":
     st.subheader("🧙 위자드 모드 — 스마트 위자드로 불확도 예산표 만들기")
     st.markdown("측정 분야를 선택하면 표준 불확도 성분들이 자동으로 제시됩니다. 필요한 항목을 선택하고 값을 입력하기만 하면 됩니다!")
 

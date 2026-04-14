@@ -27,3 +27,13 @@ icon = "🔄"
 path = "pages/5_🔑_관리자.py"
 name = "관리자"
 icon = "🔑"
+
+[[pages]]
+path = "pages/6_🗺️_KOLAS_로드맵.py"
+name = "KOLAS 로드맵"
+icon = "🗺️"
+
+[[pages]]
+path = "pages/7_📖_용어사전.py"
+name = "용어사전"
+icon = "📖"

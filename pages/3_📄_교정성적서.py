@@ -20,6 +20,7 @@ from metroai.core.distributions import DistributionType, UncertaintySource
 from metroai.core.gum import GUMCalculator
 from metroai.core.model import MeasurementModel
 from metroai.export.kolas_pdf import export_calibration_certificate_pdf
+from metroai.ui.org_profile import load_profile, render_profile_form, get_profile_value
 
 st.set_page_config(
     page_title="MetroAI — 교정성적서",
@@ -42,6 +43,16 @@ with tab1:
     st.subheader("KOLAS 교정성적서 PDF 생성")
     st.markdown("불확도 계산 결과를 입력하고, KOLAS 양식 교정성적서 PDF를 생성합니다.")
 
+    # 프로필 자동 로드
+    _profile = load_profile()
+    _has_profile = bool(_profile.get("org_name", ""))
+
+    if _has_profile:
+        st.success(f"✅ 기관 프로필 자동 적용: **{_profile['org_name']}** ({_profile.get('kolas_id', '')})")
+    else:
+        with st.expander("💡 기관 프로필을 설정하면 매번 입력할 필요가 없습니다", expanded=False):
+            render_profile_form(location="main")
+
     st.divider()
 
     col_left, col_right = st.columns(2)
@@ -49,9 +60,9 @@ with tab1:
     with col_left:
         st.markdown("**1. 교정기관 정보**")
         cert_number = st.text_input("성적서 번호", value="CAL-2026-001")
-        cal_org = st.text_input("교정기관명")
-        cal_org_kolas = st.text_input("KOLAS 인정번호", value="KOLAS-")
-        cal_org_addr = st.text_input("교정기관 소재지")
+        cal_org = st.text_input("교정기관명", value=get_profile_value("org_name"))
+        cal_org_kolas = st.text_input("KOLAS 인정번호", value=get_profile_value("kolas_id", "KOLAS-"))
+        cal_org_addr = st.text_input("교정기관 소재지", value=get_profile_value("org_address"))
 
         st.markdown("**2. 의뢰자 정보**")
         client_org = st.text_input("의뢰기관명")
@@ -64,9 +75,9 @@ with tab1:
         model_name = st.text_input("모델")
         serial = st.text_input("일련번호")
         cal_date = st.text_input("교정일", value="2026-04-14")
-        cal_location = st.text_input("교정 장소")
-        temperature = st.text_input("온도 조건", value="20.0 +/- 0.5")
-        humidity = st.text_input("습도 조건", value="50 +/- 10")
+        cal_location = st.text_input("교정 장소", value=get_profile_value("cal_location"))
+        temperature = st.text_input("온도 조건", value=get_profile_value("default_temp", "20.0 ± 0.5 °C"))
+        humidity = st.text_input("습도 조건", value=get_profile_value("default_humidity", "50 ± 10 %RH"))
 
     st.divider()
     st.markdown("**4. 불확도 결과 (간단 입력)**")
@@ -84,11 +95,11 @@ with tab1:
     st.markdown("**5. 서명**")
     c_s1, c_s2, c_s3 = st.columns(3)
     with c_s1:
-        calibrator = st.text_input("교정원")
+        calibrator = st.text_input("교정원", value=get_profile_value("calibrator_name"))
     with c_s2:
-        reviewer = st.text_input("검토자")
+        reviewer = st.text_input("검토자", value=get_profile_value("reviewer_name"))
     with c_s3:
-        approver = st.text_input("책임자")
+        approver = st.text_input("책임자", value=get_profile_value("approver_name"))
 
     if st.button("📄 교정성적서 PDF 생성", type="primary", use_container_width=True):
         model = MeasurementModel("a + b", symbol_names=["a", "b"])
