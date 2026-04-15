@@ -42,3 +42,13 @@ icon = "📖"
 path = "pages/8_✅_심사_셀프체크.py"
 name = "심사 셀프체크"
 icon = "✅"
+
+[[pages]]
+path = "pages/9_🔗_측정의뢰.py"
+name = "측정 의뢰"
+icon = "🔗"
+
+[[pages]]
+path = "pages/10_🔧_장비관리.py"
+name = "장비 관리"
+icon = "🔧"

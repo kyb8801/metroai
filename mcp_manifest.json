@@ -1,0 +1,37 @@
+{
+  "name": "metroai-uncertainty",
+  "version": "0.5.0",
+  "description": "World's first measurement uncertainty MCP server. GUM-based uncertainty calculation, Monte Carlo validation, and reverse uncertainty engineering for ISO 17025 / KOLAS laboratories.",
+  "author": "Yongbeom Kim",
+  "license": "MIT",
+  "homepage": "https://metroai-gnbdv7pqq3quqsudb5pwvj.streamlit.app",
+  "repository": "https://github.com/kyb8801/metroai",
+  "keywords": [
+    "measurement-uncertainty", "GUM", "ISO-17025", "KOLAS",
+    "calibration", "metrology", "monte-carlo", "MCM"
+  ],
+  "tools": [
+    {
+      "name": "calculate_uncertainty",
+      "description": "Calculate measurement uncertainty using GUM (ISO/IEC Guide 98-3). Supports gauge block, mass, temperature, pressure, and DC voltage calibration templates. Returns uncertainty budget table with combined uncertainty, expanded uncertainty, coverage factor, and component breakdown.",
+      "parameters": {
+        "template": "Calibration field: gauge_block, mass, temperature, pressure, dc_voltage",
+        "readings": "Repeated measurement data (array of floats)",
+        "std_cert_U": "Standard's expanded uncertainty from calibration certificate",
+        "std_cert_k": "Coverage factor from calibration certificate (usually 2.0)"
+      }
+    },
+    {
+      "name": "pt_analysis",
+      "description": "Proficiency Testing analysis — automatically judge z-score, En number, and zeta-score per ISO 13528 / ISO 17043. Input your lab value and assigned value to get instant pass/fail judgment.",
+      "parameters": {
+        "lab_value": "Your laboratory's measured value",
+        "assigned_value": "Assigned (reference) value from PT provider",
+        "sigma_pt": "Standard deviation for proficiency assessment (for z-score)",
+        "U_lab": "Your lab's expanded uncertainty (for En/zeta)",
+        "U_ref": "Reference value's expanded uncertainty"
+      }
+    }
+  ],
+  "requirements": ["sympy>=1.12", "numpy>=1.24", "scipy>=1.10"]
+}

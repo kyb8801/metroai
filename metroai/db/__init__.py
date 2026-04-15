@@ -1,1 +1,3 @@
-"""데이터베이스 모듈 (v0.2에서 구현 예정)."""
+"""MetroAI Database Layer — System of Record 기반 (v0.5.0)."""
+
+from .database import MetroAIDB, get_db
