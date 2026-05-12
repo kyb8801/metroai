@@ -1,0 +1,86 @@
+name: tests
+
+on:
+  push:
+    branches: [main]
+    tags: ['v*']
+  pull_request:
+    branches: [main]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        python-version: ['3.10', '3.11', '3.12']
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python ${{ matrix.python-version }}
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+          cache: 'pip'
+
+      - name: Install package + dev deps
+        run: |
+          python -m pip install --upgrade pip
+          pip install -e ".[dev,ml]"
+
+      - name: Lint (ruff)
+        run: ruff check metroai/ tests/
+
+      - name: Run pytest with coverage
+        run: |
+          pytest tests/ -v --cov=metroai --cov-report=term-missing --cov-report=xml
+
+      - name: Upload coverage to Codecov
+        if: matrix.python-version == '3.11'
+        uses: codecov/codecov-action@v4
+        with:
+          file: ./coverage.xml
+          fail_ci_if_error: false
+
+  smoke-v060-modules:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - run: |
+          python -m pip install --upgrade pip
+          pip install -e ".[dev]"
+      - name: Smoke — v0.6.0 신규 모듈
+        run: |
+          python -c "
+          from metroai.exceptions import MetroAIError
+          from metroai.templates import create_tem_lattice_calculator
+          from metroai.agents import all_agents, OrchestratorAgent
+          from metroai.audit import Ed25519Signer, generate_keypair
+          from metroai.schemas import CalculateUncertaintyRequest, TemplateEnum
+          from metroai.math import SobolQMC
+
+          # Templates
+          assert create_tem_lattice_calculator().calculate().expanded_uncertainty > 0
+
+          # Agents
+          sub = {a.name: a.run({}) for a in all_agents() if a.name != 'orchestrator'}
+          orch = OrchestratorAgent().run({'agent_results': sub})
+          assert orch.payload['task_count'] >= 1
+
+          # Audit
+          priv, pub = generate_keypair()
+          rec = Ed25519Signer(priv, pub).sign({'x': 1.0}, 'test')
+          assert Ed25519Signer.verify(rec)
+
+          # Schemas
+          CalculateUncertaintyRequest(template=TemplateEnum.TEM_LATTICE)
+
+          # QMC
+          assert SobolQMC(dim=2, seed=42).sample(2**10).shape == (1024, 2)
+
+          print('v0.6.0 smoke OK')
+          "

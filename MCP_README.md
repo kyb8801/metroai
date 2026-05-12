@@ -45,7 +45,7 @@ python -m metroai.mcp_server  # Test locally
 
 ## Unique Features
 
-- **Reverse Uncertainty Engineering** (world's first) — Target CMC → allowable component limits
+- **Reverse Uncertainty Engineering** (novel within prior-art search — not found in GUM Workbench, NIST Uncertainty Machine, or major open-source GUM tools as of 2026-05) — Target CMC → allowable component limits
 - **MCM Validation** — 100K Monte Carlo simulations to verify GUM results
 - **KOLAS-G-002 format** — Korean accreditation body format support
 

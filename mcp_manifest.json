@@ -1,37 +1,103 @@
 {
   "name": "metroai-uncertainty",
-  "version": "0.5.0",
-  "description": "World's first measurement uncertainty MCP server. GUM-based uncertainty calculation, Monte Carlo validation, and reverse uncertainty engineering for ISO 17025 / KOLAS laboratories.",
+  "version": "0.6.0",
+  "description": "Measurement uncertainty MCP server with novel reverse uncertainty engineering. GUM-based uncertainty calculation, Monte Carlo (MCM) plus Quasi-Monte Carlo (Sobol) validation, and reverse uncertainty engineering for ISO/IEC 17025 / KOLAS laboratories. v0.6.0 adds TEM/SEM-EDS/AFM/OCD nano-metrology templates, Ed25519 audit signatures, and PROV-O provenance.",
   "author": "Yongbeom Kim",
   "license": "MIT",
   "homepage": "https://metroai-gnbdv7pqq3quqsudb5pwvj.streamlit.app",
   "repository": "https://github.com/kyb8801/metroai",
   "keywords": [
-    "measurement-uncertainty", "GUM", "ISO-17025", "KOLAS",
-    "calibration", "metrology", "monte-carlo", "MCM"
+    "measurement-uncertainty", "GUM", "MCM", "QMC", "Sobol",
+    "ISO-17025", "ISO-18516", "KOLAS",
+    "calibration", "metrology", "monte-carlo",
+    "TEM", "SEM-EDS", "AFM", "OCD", "scatterometry", "nano-metrology",
+    "reverse-uncertainty", "RCWA", "ZAF", "surface-roughness",
+    "audit-trail", "Ed25519", "PROV-O", "verifiable-AI"
   ],
   "tools": [
     {
       "name": "calculate_uncertainty",
-      "description": "Calculate measurement uncertainty using GUM (ISO/IEC Guide 98-3). Supports gauge block, mass, temperature, pressure, and DC voltage calibration templates. Returns uncertainty budget table with combined uncertainty, expanded uncertainty, coverage factor, and component breakdown.",
+      "description": "Calculate measurement uncertainty using GUM (ISO/IEC Guide 98-3). Supports gauge_block, mass, temperature, pressure, dc_voltage, tem_lattice, sem_eds, afm_roughness, and ocd_scatterometry templates. Returns uncertainty budget table with combined uncertainty, expanded uncertainty, coverage factor, and component breakdown.",
       "parameters": {
-        "template": "Calibration field: gauge_block, mass, temperature, pressure, dc_voltage",
+        "template": "Calibration field: gauge_block | mass | temperature | pressure | dc_voltage | tem_lattice | sem_eds | afm_roughness | ocd_scatterometry",
         "readings": "Repeated measurement data (array of floats)",
-        "std_cert_U": "Standard's expanded uncertainty from calibration certificate",
-        "std_cert_k": "Coverage factor from calibration certificate (usually 2.0)"
+        "std_cert_U": "Standard expanded uncertainty from calibration certificate",
+        "std_cert_k": "Coverage factor from calibration certificate (usually 2.0)",
+        "template_kwargs": "Optional template-specific keyword arguments"
       }
     },
     {
       "name": "pt_analysis",
-      "description": "Proficiency Testing analysis — automatically judge z-score, En number, and zeta-score per ISO 13528 / ISO 17043. Input your lab value and assigned value to get instant pass/fail judgment.",
+      "description": "Proficiency Testing analysis per ISO 13528 / ISO 17043. Computes z-score, En number, and zeta-score, with automatic pass/fail judgment.",
       "parameters": {
-        "lab_value": "Your laboratory's measured value",
-        "assigned_value": "Assigned (reference) value from PT provider",
-        "sigma_pt": "Standard deviation for proficiency assessment (for z-score)",
-        "U_lab": "Your lab's expanded uncertainty (for En/zeta)",
-        "U_ref": "Reference value's expanded uncertainty"
+        "lab_value": "Your laboratory measured value",
+        "assigned_value": "Assigned reference value from the PT provider",
+        "sigma_pt": "Standard deviation for proficiency assessment (z-score)",
+        "U_lab": "Your laboratory expanded uncertainty (for En and zeta)",
+        "U_ref": "Reference value expanded uncertainty"
+      }
+    },
+    {
+      "name": "reverse_uncertainty",
+      "description": "Reverse uncertainty engineering. Given target expanded uncertainty U_target, computes the maximum allowed standard uncertainty per component so the combined uncertainty meets the target. Supports equal-allocation and weighted-allocation methods.",
+      "parameters": {
+        "model_expression": "Sympy-parseable measurement model expression",
+        "symbols": "List of symbol names in the model",
+        "current_values": "Map of symbol to current best estimate value",
+        "current_uncertainties": "Map of symbol to current standard uncertainty (optional)",
+        "target_U": "Target expanded uncertainty U_target",
+        "target_k": "Coverage factor for U_target (default 2.0)",
+        "allocation": "Allocation method: equal or weighted_by_sensitivity"
       }
     }
   ],
-  "requirements": ["sympy>=1.12", "numpy>=1.24", "scipy>=1.10"]
+  "templates": {
+    "v0.5.0": ["gauge_block", "mass", "temperature", "pressure", "dc_voltage"],
+    "v0.6.0_new": ["tem_lattice", "sem_eds", "afm_roughness", "ocd_scatterometry"]
+  },
+  "modules_v0_6_0": {
+    "agents": ["semi-intel", "job-scout", "kolas-monitor", "kolas-audit-predictor", "orchestrator", "schedule"],
+    "audit": ["Ed25519 digital signature", "W3C PROV-O provenance"],
+    "math": ["Sobol Quasi-Monte Carlo (QMC)"],
+    "schemas": "Pydantic v2 input validation"
+  },
+  "standards": [
+    "ISO/IEC 17025:2017",
+    "ISO/IEC Guide 98-3 (GUM)",
+    "ISO/IEC Guide 98-3 Suppl. 1 (MCM)",
+    "ISO 13528 (PT)",
+    "ISO 17043 (PT providers)",
+    "ISO 18516 (microscope methods)",
+    "ISO 25178-2 (areal surface texture)",
+    "ISO 22489 (SEM-EDS quantitative)",
+    "KOLAS-G-002",
+    "SEMI MF-1789 (OCD)",
+    "W3C PROV-O",
+    "RFC 8032 (Ed25519)"
+  ],
+  "requirements": [
+    "sympy>=1.12",
+    "numpy>=1.24",
+    "scipy>=1.10",
+    "pydantic>=2.0",
+    "cryptography>=42.0"
+  ],
+  "changelog": {
+    "0.6.0": [
+      "Added TEM, SEM-EDS, AFM, OCD nano-metrology templates",
+      "Added reverse_uncertainty tool (novel within prior-art search)",
+      "Added 6 AI agents backbone (semi-intel, job-scout, kolas-monitor, kolas-audit-predictor, orchestrator, schedule)",
+      "Added Ed25519 audit signature and W3C PROV-O provenance",
+      "Added Sobol Quasi-Monte Carlo (QMC) module",
+      "Added Pydantic v2 input validation schemas",
+      "Added custom exception hierarchy (MetroAIError)",
+      "Brand colors aligned to v2 spec (Indigo 800 + Cyan 500 + Slate scale)",
+      "Removed disability fee assumptions from documentation"
+    ],
+    "0.5.0": [
+      "Initial release with GUM/MCM calculation",
+      "5 base calibration templates",
+      "PT analysis (z/En/zeta)"
+    ]
+  }
 }

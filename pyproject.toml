@@ -4,15 +4,22 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "metroai"
-version = "0.1.0"
-description = "KOLAS 측정불확도 예산 자동화 도구 — MetroAI"
+version = "0.6.0"
+description = "MetroAI — KOLAS compliance OS. 6 AI agents + GUM/MCM/QMC uncertainty + verifiable audit trail."
 readme = "README.md"
 license = {text = "MIT"}
 requires-python = ">=3.10"
 authors = [
-    {name = "용범 김", email = "kyb8801@gmail.com"},
+    {name = "Yongbeom Kim", email = "kyb8801@gmail.com"},
 ]
-keywords = ["measurement-uncertainty", "GUM", "KOLAS", "metrology", "calibration"]
+keywords = [
+    "measurement-uncertainty", "GUM", "MCM", "QMC",
+    "ISO-17025", "ISO-18516", "KOLAS",
+    "calibration", "metrology",
+    "TEM", "SEM-EDS", "AFM", "OCD", "nano-metrology",
+    "compliance", "audit-trail", "Ed25519", "PROV-O",
+    "ai-agents", "regulatory",
+]
 classifiers = [
     "Development Status :: 3 - Alpha",
     "Intended Audience :: Science/Research",
@@ -29,6 +36,8 @@ dependencies = [
     "openpyxl>=3.1",
     "reportlab>=4.0",
     "streamlit>=1.30",
+    "pydantic>=2.0",
+    "cryptography>=42.0",
 ]
 
 [project.optional-dependencies]
@@ -36,6 +45,14 @@ dev = [
     "pytest>=7.0",
     "pytest-cov>=4.0",
     "ruff>=0.1",
+    "mypy>=1.8",
+]
+ml = [
+    "scikit-learn>=1.4",
+    "joblib>=1.3",
+]
+mcp = [
+    "mcp>=0.9",
 ]
 
 [tool.pytest.ini_options]
@@ -48,3 +65,14 @@ target-version = "py310"
 
 [tool.ruff.lint]
 select = ["E", "F", "W", "I"]
+ignore = ["E501", "E741"]
+
+[tool.ruff.lint.per-file-ignores]
+"tests/**" = ["E501"]
+"metroai/templates/*.py" = ["E501"]
+
+[tool.mypy]
+python_version = "3.10"
+warn_return_any = false
+warn_unused_configs = true
+ignore_missing_imports = true

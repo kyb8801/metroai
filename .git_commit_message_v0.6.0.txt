@@ -1,0 +1,33 @@
+v0.6.0 — 6 AI agents + audit (Ed25519/PROV-O) + 4 nano templates + QMC + connectors + ML + v2 design tokens
+
+Breaking changes: none (v0.5.0 GUM engine intact)
+
+Added (v0.6.0):
+- metroai/exceptions.py — 14-class custom exception hierarchy
+- metroai/templates/{tem_lattice,sem_eds,afm_roughness,ocd_scatterometry}.py — 4 nano-metrology templates
+- metroai/agents/ — 6-agent backbone (semi-intel, job-scout, kolas-monitor, kolas-audit-predictor, orchestrator, schedule)
+- metroai/audit/ — Ed25519 digital signatures + W3C PROV-O provenance
+- metroai/connectors/ — KOLAS / DART / NTIS live fetch with stub fallback
+- metroai/schemas.py — Pydantic v2 input validation (6 schemas, 4 enums)
+- metroai/math/sobol_qmc.py — Sobol QMC (verified GUM agreement plus-minus 0.003 percent)
+- metroai/ml/ — GradientBoosting audit risk model + synthetic data generator
+- pages/11_*_6_Agents_dashboard.py — v2 spec main dashboard
+- pages/12_*_SOP_gap_analysis.py — v2 spec block 4
+- tests/test_v060_modules.py + tests/test_v060_ml.py — 36 passing tests
+
+Design:
+- app.py colors aligned to v2 spec (Indigo 800 + Cyan 500 + Slate scale)
+- KOLAS compliance grade tone (no decorative gradients, document-first)
+
+CI/CD:
+- .github/workflows/tests.yml — 3.10/3.11/3.12 matrix + ruff + Codecov
+- .github/workflows/release.yml — tag push -> PyPI OIDC trusted publishing
+
+Honest metrics (D sprint):
+- kolas-audit-predictor GBT: synthetic 5-fold CV acc 60.6 percent (n=2000, 6 features, label noise 0.15)
+- 87.1 percent prior sandbox figure removed from all artifacts
+- See docs/HONESTY_NOTES.md for citation rules
+
+Marketplace:
+- mcp_manifest.json bumped to v0.6.0 (3 tools + 9 templates + 12 standards)
+- vertical-mcp/REGISTRATION_GUIDE.md for MCPize/Glama/Anthropic registry submission

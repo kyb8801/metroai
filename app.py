@@ -34,10 +34,11 @@ st.markdown(
     .hero-container {
         text-align: center;
         padding: 3.5rem 2rem 2.5rem 2rem;
-        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        background: linear-gradient(135deg, #1E40AF 0%, #0B1220 100%);
         color: white;
-        border-radius: 12px;
+        border-radius: 8px;
         margin-bottom: 1.5rem;
+        border: 1px solid #1E40AF;
     }
     .hero-title {
         font-size: 3.2rem;
@@ -66,23 +67,23 @@ st.markdown(
     .std-badge {
         display: inline-block;
         padding: 0.35rem 0.85rem;
-        background: #f0f2ff;
-        color: #4a4ea0;
-        border: 1px solid #d0d6f5;
+        background: #F8FAFC;
+        color: #1E40AF;
+        border: 1px solid #06B6D4;
         border-radius: 20px;
         font-size: 0.82rem;
         font-weight: 500;
         letter-spacing: 0.01em;
     }
     .std-badge.primary {
-        background: #4a4ea0;
+        background: #1E40AF;
         color: white;
-        border-color: #4a4ea0;
+        border-color: #1E40AF;
     }
     /* 산출물 카운터 */
     .counter-box {
-        background: linear-gradient(135deg, #f8f9ff 0%, #e8ecff 100%);
-        border: 2px solid #c0c8f5;
+        background: linear-gradient(135deg, #F8FAFC 0%, #E2E8F0 100%);
+        border: 2px solid #06B6D4;
         border-radius: 12px;
         padding: 2rem;
         text-align: center;
@@ -96,7 +97,7 @@ st.markdown(
     .counter-number {
         font-size: 3.5rem;
         font-weight: 800;
-        color: #4a4ea0;
+        color: #1E40AF;
         line-height: 1.0;
         margin: 0.3rem 0;
     }
@@ -118,7 +119,7 @@ st.markdown(
         background: white;
         padding: 1.8rem 1.2rem;
         border-radius: 10px;
-        border: 1px solid #e0e4f0;
+        border: 1px solid #E2E8F0;
         height: 100%;
         transition: all 0.2s;
         display: flex;
@@ -129,15 +130,15 @@ st.markdown(
     .tool-card:hover {
         transform: translateY(-4px);
         box-shadow: 0 8px 20px rgba(74, 78, 160, 0.12);
-        border-color: #667eea;
+        border-color: #1E40AF;
     }
     .tool-card.featured {
-        border: 2px solid #667eea;
-        background: linear-gradient(180deg, #fafbff 0%, #ffffff 60%);
+        border: 2px solid #1E40AF;
+        background: linear-gradient(180deg, #F8FAFC 0%, #ffffff 60%);
     }
     .tool-card.disabled {
         opacity: 0.75;
-        background: #f8f8fa;
+        background: #F1F5F9;
     }
     .tool-icon {
         font-size: 2.8rem;
@@ -152,20 +153,20 @@ st.markdown(
     .tool-badge {
         font-size: 0.72rem;
         padding: 0.18rem 0.55rem;
-        background: #fff3e0;
-        color: #e65100;
+        background: #FEF3C7;
+        color: #F59E0B;
         border-radius: 10px;
         font-weight: 600;
         margin-bottom: 0.5rem;
         display: inline-block;
     }
     .tool-badge.first {
-        background: #fce4ec;
-        color: #c2185b;
+        background: #FEE2E2;
+        color: #EF4444;
     }
     .tool-badge.soon {
-        background: #e0e0e0;
-        color: #616161;
+        background: #E2E8F0;
+        color: #475569;
     }
     .tool-desc {
         color: #666;
@@ -176,17 +177,17 @@ st.markdown(
     }
     /* 3단계 가이드 */
     .step-card {
-        background: #f8f9ff;
+        background: #F8FAFC;
         padding: 1.5rem 1.2rem;
         border-radius: 10px;
         text-align: center;
-        border-top: 4px solid #667eea;
+        border-top: 4px solid #1E40AF;
         height: 100%;
     }
     .step-number {
         font-size: 2.5rem;
         font-weight: 700;
-        color: #667eea;
+        color: #1E40AF;
         margin-bottom: 0.3rem;
     }
     .step-title {
@@ -210,18 +211,18 @@ st.markdown(
     .comparison-table td {
         padding: 0.9rem;
         text-align: left;
-        border-bottom: 1px solid #e0e0e0;
+        border-bottom: 1px solid #E2E8F0;
     }
     .comparison-table th {
-        background: #f5f7ff;
+        background: #F8FAFC;
         font-weight: 600;
-        color: #667eea;
+        color: #1E40AF;
     }
-    .before-cell { color: #d32f2f; font-weight: 500; }
-    .after-cell  { color: #388e3c; font-weight: 500; }
+    .before-cell { color: #EF4444; font-weight: 500; }
+    .after-cell  { color: #10B981; font-weight: 500; }
     /* 요금제 */
     .pricing-card {
-        border: 2px solid #e0e0e0;
+        border: 2px solid #E2E8F0;
         border-radius: 8px;
         padding: 1.8rem 1.2rem;
         text-align: center;
@@ -229,12 +230,12 @@ st.markdown(
         height: 100%;
     }
     .pricing-card.recommended {
-        border-color: #667eea;
-        background: #f5f7ff;
+        border-color: #1E40AF;
+        background: #F8FAFC;
     }
     .pricing-badge {
         display: inline-block;
-        background: #667eea;
+        background: #1E40AF;
         color: white;
         padding: 0.3rem 0.7rem;
         border-radius: 20px;
@@ -250,7 +251,7 @@ st.markdown(
     .pricing-price {
         font-size: 1.8rem;
         font-weight: 700;
-        color: #667eea;
+        color: #1E40AF;
         margin-bottom: 0.7rem;
     }
     .pricing-features {
@@ -264,7 +265,7 @@ st.markdown(
         color: #888;
         font-size: 0.88rem;
         padding: 2rem 0 1rem 0;
-        border-top: 1px solid #e0e0e0;
+        border-top: 1px solid #E2E8F0;
         line-height: 1.7;
         margin-top: 2rem;
     }
@@ -518,8 +519,8 @@ comparison_data = [
 table_html = "<table class='comparison-table'>"
 table_html += (
     "<tr><th>구분</th>"
-    "<th style='color:#d32f2f;'>엑셀 수작업</th>"
-    "<th style='color:#388e3c;'>MetroAI</th></tr>"
+    "<th style='color:#EF4444;'>엑셀 수작업</th>"
+    "<th style='color:#10B981;'>MetroAI</th></tr>"
 )
 for label, before, after in comparison_data:
     table_html += (
