@@ -20,3 +20,4 @@ pytest-cache-files-*/
 .ruff_cache/
 .claude/
 node_modules/
+.git_commit_message_*.txt
