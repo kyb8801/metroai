@@ -8,7 +8,7 @@
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 [![Python](https://img.shields.io/badge/python-3.10%2B-blue)](https://www.python.org)
 [![Version](https://img.shields.io/badge/version-v0.8.0--dev-1E40AF)](https://github.com/kyb8801/metroai/releases)
-[![Tests](https://img.shields.io/badge/tests-105%2B%20passing-10B981)](https://github.com/kyb8801/metroai/actions)
+[![Tests](https://img.shields.io/badge/tests-214%20passing-10B981)](https://github.com/kyb8801/metroai/actions)
 [![MCPize](https://img.shields.io/badge/MCPize-live-06B6D4)](https://mcpize.com/mcp/measurement-uncertainty)
 [![Glama Maintenance](https://img.shields.io/badge/Glama%20Maintenance-B-06B6D4)](https://glama.ai/mcp/servers/kyb8801/metroai)
 [![Streamlit](https://img.shields.io/badge/Streamlit-app-FF4B4B)](https://measurement-uncertainty.streamlit.app)
@@ -363,8 +363,8 @@ pip install -e ".[dev,ml]"
 pytest tests/ -v
 ```
 
-Latest CI on Python 3.10 / 3.11 / 3.12 — **36 passing v0.6.0 tests** plus
-the v0.5 legacy suite. Inverse modules (`metroai/inverse/`) currently
+Latest CI on Python 3.10 / 3.11 / 3.12 — **214 passing tests** across
+the v0.5 → v0.7 suites. Inverse modules (`metroai/inverse/`) currently
 self-verify via their `__main__` blocks; folding them into the pytest CI suite
 is a P1 roadmap item.
 
