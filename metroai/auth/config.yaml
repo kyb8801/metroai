@@ -1,0 +1,10 @@
+credentials:
+  usernames:
+    admin:
+      name: 관리자
+      password: c6997c359fc85e8f802a940cafb8c217:8d9ca2a97c89d4f4491b097c6e43197ee5a1c19e27e6f719107adff84f461773
+      role: admin
+    guest:
+      name: 게스트
+      password: ba2fda2a72a17a99d04e2d888c37a491:0f7f5d1ad6eea3ef9a3e85520a3533304ae12c6905b72f9caaa3c50b7f2391eb
+      role: user
