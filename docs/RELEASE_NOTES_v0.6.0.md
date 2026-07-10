@@ -75,7 +75,7 @@ ISO 18516 / ISO 25178-2 / ISO 22489 / SEMI MF-1789 호환:
 새 의존성:
 - `pydantic>=2.0` — 입력 검증
 - `cryptography>=42.0` — Ed25519
-- (선택) `scikit-learn>=1.4`, `joblib>=1.3` — `pip install metroai[ml]`
+- (선택) `scikit-learn>=1.4`, `joblib>=1.3` — `pip install -e ".[ml]"`
 
 ---
 

@@ -8,7 +8,7 @@ v0.6.0 sprint — v0.6.0.
   3. 모델 미설치 시 (scikit-learn 부재) — graceful fallback to baseline rule
 
 scikit-learn 은 optional dependency 로 두어 설치 부담을 줄임.
-설치: `pip install metroai[ml]`
+설치: `pip install -e ".[ml]"` (저장소 루트에서)
 """
 
 from __future__ import annotations

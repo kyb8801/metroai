@@ -62,7 +62,7 @@ Live demo: temporarily offline - migrating to Hugging Face Spaces (Roadmap P2). 
 ### As a Python library
 
 ```bash
-pip install metroai
+pip install git+https://github.com/kyb8801/metroai.git
 ```
 
 ```python
@@ -352,7 +352,7 @@ shifted from **outbound-first → user-fit-first**.
 | **P0** | Inverse engine: 2 shared cores (GUM + ML uncertainty) + 11 instrument modules | ✅ shipped v0.8.0 | Forward U → inverse param+U |
 | P1 | Inverse engine: real-data benchmark expansion (XRR / TEM / AFM measured) + pytest in CI | in progress | Lift ★★ → ★★★ |
 | P1 | Real KOLAS audit data + GBT retrain | pending | Replace synthetic 60.6% |
-| P2 | HF Spaces migration | guide ready | Eliminate Streamlit Cloud sleep |
+| P2 | HF Spaces migration | planned | Eliminate Streamlit Cloud sleep |
 | P3 | Consulting SOP guide (per-domain on-site eval prep) | needs author | Cover stage 7 partially |
 | P3 | LLM-assisted kolas-monitor (real inference) | stub now | Clear AI differentiation |
 
