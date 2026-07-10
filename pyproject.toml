@@ -15,7 +15,7 @@ metroai = ["**/*.yaml", "**/*.yml", "**/*.json"]
 
 [project]
 name = "metroai"
-version = "0.6.0"
+version = "0.8.0"
 description = "MetroAI — KOLAS compliance OS. 6 AI agents + GUM/MCM/QMC uncertainty + verifiable audit trail."
 readme = "README.md"
 license = {text = "MIT"}

@@ -7,12 +7,10 @@
 [![CI](https://github.com/kyb8801/metroai/actions/workflows/tests.yml/badge.svg)](https://github.com/kyb8801/metroai/actions)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 [![Python](https://img.shields.io/badge/python-3.10%2B-blue)](https://www.python.org)
-[![Version](https://img.shields.io/badge/version-v0.8.0--dev-1E40AF)](https://github.com/kyb8801/metroai/releases)
+[![Version](https://img.shields.io/badge/version-v0.8.0-1E40AF)](https://github.com/kyb8801/metroai/releases)
 [![Tests](https://img.shields.io/badge/tests-214%20passing-10B981)](https://github.com/kyb8801/metroai/actions)
 [![MCPize](https://img.shields.io/badge/MCPize-live-06B6D4)](https://mcpize.com/mcp/measurement-uncertainty)
 [![Glama Maintenance](https://img.shields.io/badge/Glama%20Maintenance-B-06B6D4)](https://glama.ai/mcp/servers/kyb8801/metroai)
-[![Streamlit](https://img.shields.io/badge/Streamlit-app-FF4B4B)](https://measurement-uncertainty.streamlit.app)
-[![Awesome MCP PR](https://img.shields.io/badge/Awesome%20MCP-PR%20%236594-brightgreen)](https://github.com/punkpeye/awesome-mcp-servers/pull/6594)
 
 ---
 
@@ -54,7 +52,7 @@ pip install -e ".[dev,ml]"
 streamlit run app.py
 ```
 
-Live demo: [metroai-gnbdv7pqq3quqsudb5pwvj.streamlit.app](https://metroai-gnbdv7pqq3quqsudb5pwvj.streamlit.app)
+Live demo: temporarily offline - migrating to Hugging Face Spaces (Roadmap P2). Run locally with the two commands above.
 
 ### As a Python library
 
@@ -332,7 +330,7 @@ shifted from **outbound-first → user-fit-first**.
 | **P0** | Domain-specific KOLAS guides | ✅ shipped v0.7.0 | Stage 2, 4 |
 | **P0** | KOLAS application form auto-generator | ✅ shipped v0.7.0 | Stage 3 |
 | **P0** | Domain SOP rule-based checklist | ✅ shipped v0.7.0 | Stage 5 |
-| **P0** | Inverse engine: 2 shared cores (GUM + ML uncertainty) + 11 instrument modules | ✅ landed on main (v0.8.0-dev) | Forward U → inverse param+U |
+| **P0** | Inverse engine: 2 shared cores (GUM + ML uncertainty) + 11 instrument modules | ✅ shipped v0.8.0 | Forward U → inverse param+U |
 | P1 | Inverse engine: real-data benchmark expansion (XRR / TEM / AFM measured) + pytest in CI | in progress | Lift ★★ → ★★★ |
 | P1 | Real KOLAS audit data + GBT retrain | pending | Replace synthetic 60.6% |
 | P2 | HF Spaces migration | guide ready | Eliminate Streamlit Cloud sleep |

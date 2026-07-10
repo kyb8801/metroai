@@ -3,7 +3,7 @@
 > 외부 약속·인용·홍보 자료 작성 전 반드시 확인.
 > 본 문서는 v0.6.0 통합 sprint 의 정직 점검 결과를 누적한다.
 
-마지막 업데이트: 2026-05-12 (D sprint)
+마지막 업데이트: 2026-07-10 (v0.8.0 정비 — Streamlit 데모 상태 정정)
 
 ---
 
@@ -13,7 +13,7 @@
 
 | 사실 | 근거 | 어디까지 말해도 되는가 |
 |---|---|---|
-| Streamlit v0.5.0 deployment 운영 중 | `https://metroai-gnbdv7pqq3quqsudb5pwvj.streamlit.app` 살아있음 | "현재 v0.5 가 배포 운영 중이며 v0.6 으로 업그레이드 중" |
+| ~~Streamlit deployment 운영 중~~ → 2026-07-10 확인: 데모 URL 무응답(절전/중단) | README에서 배지·링크 제거 완료, HF Spaces 이전 예정(Roadmap P2) | "라이브 데모는 이전 작업 중" — '운영 중'이라고 말하지 말 것 |
 | GUM/MCM 계산 엔진 통과 | `tests/test_gum.py`, `tests/test_mcm.py` 통과 | "GUM ISO 98-3 표준 계산 통과" |
 | QMC vs GUM 정합성 ±0.003% | `tests/test_v060_modules.py::test_qmc_matches_gum_analytic_linear_model` | "Sobol QMC 가 단순 선형 모델에서 GUM 해석해와 ±0.003% 일치" |
 | 9개 templates 동작 (v0.5 5 + v0.6 4) | `tests/test_v060_modules.py` 29 통과 | "9개 교정·시험 분야 템플릿 보유" |
