@@ -1,7 +1,6 @@
 # 📐 MetroAI — KOLAS Compliance OS + Inverse Metrology Engine
 
-> **Measurement uncertainty MCP server + 6 AI agents + verifiable audit trail
-> + uncertainty-aware ML inverse metrology (11 instruments).**
+> **Measurement uncertainty MCP server + 6 AI agents + verifiable audit trail + uncertainty-aware ML inverse metrology (11 instruments).**
 > ISO/IEC 17025 + KOLAS-accredited laboratories.
 
 [![CI](https://github.com/kyb8801/metroai/actions/workflows/tests.yml/badge.svg)](https://github.com/kyb8801/metroai/actions)
