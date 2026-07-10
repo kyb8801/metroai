@@ -55,4 +55,4 @@ MIT
 
 ## Author
 
-Yongbeom Kim, PhD — Metrology & Semiconductor | kyb8801@gmail.com
+Youngbum Kim, PhD — Metrology & Semiconductor | kyb8801@gmail.com

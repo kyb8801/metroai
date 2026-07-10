@@ -33,8 +33,8 @@ the inverse engine recovers a **parameter and its uncertainty from a measured
 signal** (spectrum / image / diffraction) across 11 instruments, all sharing
 one GUM core and one ML-uncertainty core.
 
-Built solo by **Yongbeom Kim** (Ph.D., KTR ISO 17034 cert. 2024-CM-007), who ran
-KOLAS accreditation audits at a certified reference-material producer with **zero major non-conformities** and got
+Built solo by **Youngbum Kim** (Ph.D.) — a practitioner from a KOLAS-accredited ISO 17034
+reference-material producer who supported accreditation audits and got
 tired of redoing everything in Excel and email every quarter.
 
 ---

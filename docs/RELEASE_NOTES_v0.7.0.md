@@ -200,7 +200,7 @@ After the 5/19 P0 implementation push:
 
 ## Acknowledgments
 
-Architecture, code, and content shipped by Yongbeom Kim with the
+Architecture, code, and content shipped by Youngbum Kim with the
 **Park Soo-yeon** AI advisor persona for the P0 sprint planning, journey
 mapping, and the per-domain content scaffolding.
 

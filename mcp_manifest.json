@@ -2,7 +2,7 @@
   "name": "metroai-uncertainty",
   "version": "0.8.0",
   "description": "Measurement uncertainty MCP server with novel reverse uncertainty engineering. GUM-based uncertainty calculation, Monte Carlo (MCM) plus Quasi-Monte Carlo (Sobol) validation, and reverse uncertainty engineering for ISO/IEC 17025 / KOLAS laboratories. v0.6.0 adds TEM/SEM-EDS/AFM/OCD nano-metrology templates, Ed25519 audit signatures, and PROV-O provenance.",
-  "author": "Yongbeom Kim",
+  "author": "Youngbum Kim",
   "license": "MIT",
   "homepage": "https://github.com/kyb8801/metroai",
   "repository": "https://github.com/kyb8801/metroai",

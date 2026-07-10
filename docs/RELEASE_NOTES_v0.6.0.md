@@ -91,7 +91,7 @@ git pull && pip install -e ".[dev,ml]"
 
 ## Credits
 
-- Solo build by Yongbeom Kim (KTR ISO 17034 cert. 2024-CM-007)
+- Solo build by Youngbum Kim (KOLAS-accredited ISO 17034 RM-producer practitioner)
 - Inspired by hands-on KOLAS metrology operations
 
 ---

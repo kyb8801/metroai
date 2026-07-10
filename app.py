@@ -352,7 +352,7 @@ st.markdown(
     </div>
     <p style='color:#475569;font-size:0.85rem;margin-top:-1rem;'>
       본 서비스는 KOLAS 인정 기관 실무자에 의해 설계되었습니다 ·
-      Yongbeom Kim · KTR ISO 17034 cert. 2024-CM-007
+      Youngbum Kim · KOLAS-accredited ISO 17034 RM-producer practitioner
     </p>
     """,
     unsafe_allow_html=True,
@@ -478,7 +478,7 @@ st.markdown(
       "저는 KOLAS 인정 표준물질생산기관에서 정기심사를 직접 운영했고, 부적합 0건으로
       통과시켰습니다. 그 과정의 모든 작업이 엑셀과 이메일에 흩어져 있었습니다.
       MetroAI 는 제가 그 시절에 절실히 필요했던 도구입니다."
-      <cite>— 김용범, Ph.D. · KTR ISO 17034 cert. 2024-CM-007</cite>
+      <cite>— 김용범, Ph.D. · KOLAS 인정 표준물질생산기관(ISO 17034) 실무</cite>
     </div>
     """,
     unsafe_allow_html=True,
@@ -490,7 +490,7 @@ st.markdown(
 st.markdown(
     f"""
     <div class='v2-footer'>
-      MetroAI v0.6.0 · © 2026 Yongbeom Kim · MIT License<br>
+      MetroAI v0.6.0 · © 2026 Youngbum Kim · MIT License<br>
       <a href='https://github.com/kyb8801/metroai' style='color:#1E40AF;text-decoration:none;'>GitHub</a> ·
       <a href='https://mcpize.com/mcp/measurement-uncertainty' style='color:#1E40AF;text-decoration:none;'>MCPize</a> ·
       <a href='https://glama.ai/mcp/servers?query=metroai' style='color:#1E40AF;text-decoration:none;'>Glama</a><br>
