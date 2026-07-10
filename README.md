@@ -325,7 +325,7 @@ metroai/
 │   ├── schemas.py             ← Pydantic v2 input validation
 │   ├── exceptions.py          ← MetroAIError hierarchy
 │   └── mcp_server.py          ← MCP stdio server
-├── tests/                     ← 80+ unit tests (pytest)
+├── tests/                     ← 214 unit tests (pytest)
 ├── docs/
 │   ├── HONESTY_NOTES.md       ← Citation rules
 │   ├── TRUSTWORTHY_AI.md      ← Trust & governance policy
