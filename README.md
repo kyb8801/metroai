@@ -311,6 +311,7 @@ metroai/
 ├── tests/                     ← 80+ unit tests (pytest)
 ├── docs/
 │   ├── HONESTY_NOTES.md       ← Citation rules
+│   ├── TRUSTWORTHY_AI.md      ← Trust & governance policy
 │   ├── v0.7.0_ROADMAP.md      ← Next 3 months
 │   └── RELEASE_NOTES_v0.6.0.md
 ├── mcp_manifest.json          ← MCPize manifest (v0.6.0)
