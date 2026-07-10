@@ -1,9 +1,9 @@
 name: release
 
 on:
-  push:
-    tags:
-      - 'v*'
+  # Manual trigger only - re-enable the tag trigger once PyPI trusted publishing
+  # is configured for this repo (previous tag-triggered publish runs failed).
+  workflow_dispatch:
 
 jobs:
   build-and-publish:
