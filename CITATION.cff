@@ -1,0 +1,12 @@
+cff-version: 1.2.0
+message: "If you use MetroAI, please cite it as below."
+title: "MetroAI: KOLAS Compliance OS + Inverse Metrology Engine"
+type: software
+authors:
+  - family-names: "Kim"
+    given-names: "Youngbum"
+    email: "kyb8801@gmail.com"
+version: 0.8.0
+date-released: 2026-07-10
+url: "https://github.com/kyb8801/metroai"
+license: MIT

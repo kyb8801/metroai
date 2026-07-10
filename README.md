@@ -14,6 +14,12 @@
 
 ---
 
+> **🇰🇷 한국어 요약** — MetroAI는 한국 KOLAS 인정기관(1,200+)의 시험·교정·표준물질 업무를 위한
+> **AI 컴플라이언스 OS + 측정불확도 MCP 서버**입니다. GUM/MCM 불확도 엔진, 6종 AI 에이전트,
+> Ed25519+PROV-O 검증가능 감사추적, 역계측 엔진(11개 장비)을 제공하며, 자동화 테스트 214건과
+> [정직성 규칙](docs/HONESTY_NOTES.md)·[Trustworthy AI 정책](docs/TRUSTWORTHY_AI.md)으로 AI 산출물의 신뢰성을 관리합니다.
+> 상세 한국어 안내는 [아래 섹션](#한국어-사용자를-위한-안내) 참고.
+
 ## What is this?
 
 A **compliance operating system** for Korea's 1,200+ KOLAS-accredited testing,
@@ -118,6 +124,8 @@ stages we can't automate ourselves (the "consulting + on-site evaluator
 hand-holding" piece of the journey).
 
 ### 1. Compliance OS — 6 AI agents (since v0.6.0)
+
+![6-agent architecture](docs/figure_6_agents_architecture.svg)
 
 | Agent | Role | Data source |
 |---|---|---|
@@ -228,6 +236,18 @@ KIPO review, not in this repo.
 - Top 3 feature importances: `months_since_last_audit` (0.34) · `personnel_turnover` (0.25) · `sop_completeness` (0.24) — aligned with domain intuition.
 - **External validation on real KOLAS audit outcomes is pending.** Synthetic-data metrics do not imply real-world accuracy.
 - A prior sandbox figure of *87.1%* has been **removed from all artifacts**. See [`docs/HONESTY_NOTES.md`](docs/HONESTY_NOTES.md) for citation rules.
+
+---
+
+## Trustworthy AI
+
+MetroAI treats AI-output trust as a first-class engineering problem — full policy in
+[`docs/TRUSTWORTHY_AI.md`](docs/TRUSTWORTHY_AI.md):
+
+- **Data-origin labels** — every dataset and metric tagged real / synthetic / stub
+- **Honest metrics** — publication rules in [`docs/HONESTY_NOTES.md`](docs/HONESTY_NOTES.md) (see synthetic-data caveats above)
+- **Verifiable audit trail** — Ed25519 signatures + W3C PROV-O provenance graphs
+- **Uncertainty quantification** — every inverse-engine estimate ships with its uncertainty
 
 ---
 
