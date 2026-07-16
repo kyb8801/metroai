@@ -8,6 +8,8 @@
 [![Python](https://img.shields.io/badge/python-3.10%2B-blue)](https://www.python.org)
 [![Version](https://img.shields.io/badge/version-v0.8.0-1E40AF)](https://github.com/kyb8801/metroai/releases)
 [![Tests](https://img.shields.io/badge/tests-214%20passing-10B981)](https://github.com/kyb8801/metroai/actions)
+[![Demo](https://img.shields.io/badge/Demo-Streamlit%20(sleeps%20when%20idle)-FF4B4B)](https://metroai-gnbdv7pqq3quqsudb5pwvj.streamlit.app)
+[![Awesome MCP](https://img.shields.io/badge/Awesome%20MCP-PR%20%236980%20in%20review-orange)](https://github.com/punkpeye/awesome-mcp-servers/pull/6980)
 [![MCPize](https://img.shields.io/badge/MCPize-live-06B6D4)](https://mcpize.com/mcp/measurement-uncertainty)
 [![Glama Maintenance](https://img.shields.io/badge/Glama%20Maintenance-B-06B6D4)](https://glama.ai/mcp/servers/kyb8801/metroai)
 
@@ -57,7 +59,7 @@ pip install -e ".[dev,ml]"
 streamlit run app.py
 ```
 
-Live demo: temporarily offline - migrating to Hugging Face Spaces (Roadmap P2). Run locally with the two commands above.
+Live demo: [metroai-gnbdv7pqq3quqsudb5pwvj.streamlit.app](https://metroai-gnbdv7pqq3quqsudb5pwvj.streamlit.app) — hosted on Streamlit Community Cloud, which puts the app to sleep after inactivity; the first visit may ask for a one-click wake-up and take about a minute. A Hugging Face Spaces migration is planned (Roadmap P2). Or run locally with the two commands above.
 
 ### As a Python library
 
