@@ -19,6 +19,8 @@ import logging
 from datetime import datetime
 from typing import Any
 
+from metroai import __version__
+
 from .base import BaseConnector, ConnectorResult
 
 logger = logging.getLogger(__name__)
@@ -85,7 +87,7 @@ class KolasConnector(BaseConnector):
                     url,
                     timeout=10,
                     headers={
-                        "User-Agent": "MetroAI/0.6.0 (KOLAS compliance monitoring; +https://github.com/kyb8801/metroai)"
+                        "User-Agent": f"MetroAI/{__version__} (KOLAS compliance monitoring; +https://github.com/kyb8801/metroai)"
                     },
                 )
                 if resp.status_code != 200:

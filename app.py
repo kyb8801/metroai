@@ -1,4 +1,4 @@
-"""MetroAI — v2 spec 랜딩 페이지 (v0.7.0).
+"""MetroAI — v2 spec 랜딩 페이지 (v0.8.0).
 
 v2 design Phase 1 블록 1 (마케팅 랜딩 페이지) Streamlit 구현.
 KOLAS 컴플라이언스 SaaS positioning, 6 AI agents, KOLAS-실무자 톤.
@@ -339,7 +339,7 @@ st.markdown(
     <div class='v2-cred-row'>
       <div class='v2-cred-card'>
         <div class='v2-cred-label'>현재 상태</div>
-        <div class='v2-cred-value'>v0.6.0 · 운영 중</div>
+        <div class='v2-cred-value'>v0.8.0 · 운영 중</div>
       </div>
       <div class='v2-cred-card'>
         <div class='v2-cred-label'>kolas-audit-predictor</div>
@@ -463,7 +463,7 @@ st.markdown(
       </div>
     </div>
     <p style='color:#475569;font-size:0.85rem;text-align:center;margin-top:1rem;'>
-      v0.6.0 단계 — 현재 모든 기능 무료 evaluation.
+      v0.8.0 단계 — 현재 모든 기능 무료 evaluation.
     </p>
     """,
     unsafe_allow_html=True,
@@ -490,7 +490,7 @@ st.markdown(
 st.markdown(
     f"""
     <div class='v2-footer'>
-      MetroAI v0.6.0 · © 2026 Youngbum Kim · MIT License<br>
+      MetroAI v0.8.0 · © 2026 Youngbum Kim · MIT License<br>
       <a href='https://github.com/kyb8801/metroai' style='color:#1E40AF;text-decoration:none;'>GitHub</a> ·
       <a href='https://mcpize.com/mcp/measurement-uncertainty' style='color:#1E40AF;text-decoration:none;'>MCPize</a> ·
       <a href='https://glama.ai/mcp/servers?query=metroai' style='color:#1E40AF;text-decoration:none;'>Glama</a><br>

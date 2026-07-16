@@ -15,6 +15,8 @@ from dataclasses import dataclass, field
 from datetime import datetime
 from typing import Any
 
+from metroai import __version__
+
 
 PROV_NAMESPACE = "http://www.w3.org/ns/prov#"
 METROAI_NAMESPACE = "https://metroai.kr/ns/v1#"
@@ -77,7 +79,7 @@ def build_calculation_provenance(
     model_expression: str | None = None,
     standard_refs: list[str] | None = None,
     user_agent: str | None = None,
-    software_agent: str = "metroai/0.6.0",
+    software_agent: str = f"metroai/{__version__}",
     started_at: str | None = None,
     ended_at: str | None = None,
 ) -> ProvenanceRecord:
