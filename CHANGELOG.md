@@ -16,6 +16,12 @@ Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) · Versioning: 
   2026-07-16; successor of #6594, closed for being multi-server).
 
 ### Added
+- **DCC module** (`metroai.dcc`, experimental v1): parser + builder for the
+  PTB Digital Calibration Certificate XML standard (schema 3.3.0), D-SI unit
+  mapping, and a KOLAS/ISO 17025 ↔ DCC mapping doc (`metroai/dcc/kolas_map.md`).
+  30 new tests (29 always-on incl. a round-trip against an official PTB Good
+  Practice example; 1 optional official-XSD validation via the `dcc` extra,
+  `pip install -e ".[dcc]"`). Suite: 214 → 243 passing by default.
 - This `CHANGELOG.md`.
 
 ## [0.8.0] — 2026-07-10

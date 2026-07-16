@@ -7,7 +7,7 @@
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 [![Python](https://img.shields.io/badge/python-3.10%2B-blue)](https://www.python.org)
 [![Version](https://img.shields.io/badge/version-v0.8.0-1E40AF)](https://github.com/kyb8801/metroai/releases)
-[![Tests](https://img.shields.io/badge/tests-214%20passing-10B981)](https://github.com/kyb8801/metroai/actions)
+[![Tests](https://img.shields.io/badge/tests-243%20passing-10B981)](https://github.com/kyb8801/metroai/actions)
 [![Demo](https://img.shields.io/badge/Demo-Streamlit%20(sleeps%20when%20idle)-FF4B4B)](https://metroai-gnbdv7pqq3quqsudb5pwvj.streamlit.app)
 [![Awesome MCP](https://img.shields.io/badge/Awesome%20MCP-PR%20%236980%20in%20review-orange)](https://github.com/punkpeye/awesome-mcp-servers/pull/6980)
 [![MCPize](https://img.shields.io/badge/MCPize-live-06B6D4)](https://mcpize.com/mcp/measurement-uncertainty)
@@ -17,7 +17,7 @@
 
 > **🇰🇷 한국어 요약** — MetroAI는 한국 KOLAS 인정기관(1,200+)의 시험·교정·표준물질 업무를 위한
 > **AI 컴플라이언스 OS + 측정불확도 MCP 서버**입니다. GUM/MCM 불확도 엔진, 6종 AI 에이전트,
-> Ed25519+PROV-O 검증가능 감사추적, 역계측 엔진(11개 장비)을 제공하며, 자동화 테스트 214건과
+> Ed25519+PROV-O 검증가능 감사추적, 역계측 엔진(11개 장비)을 제공하며, 자동화 테스트 243건과
 > [정직성 규칙](docs/HONESTY_NOTES.md)·[Trustworthy AI 정책](docs/TRUSTWORTHY_AI.md)으로 AI 산출물의 신뢰성을 관리합니다.
 > 상세 한국어 안내는 [아래 섹션](#한국어-사용자를-위한-안내) 참고.
 
@@ -263,7 +263,49 @@ MetroAI treats AI-output trust as a first-class engineering problem — full pol
 - KOLAS-G-001 / G-002 (Korean accreditation guidelines)
 - SEMI MF-1789 (OCD scatterometry)
 - W3C PROV-O (audit provenance)
+- PTB DCC 3.3.0 + D-SI 2.2.1 (digital calibration certificate — experimental `dcc` module)
 - RFC 8032 (Ed25519 signatures)
+
+---
+
+## DCC — Digital Calibration Certificate (experimental)
+
+`metroai.dcc` is a first-pass (v1) toolkit for the PTB-led **Digital Calibration
+Certificate** XML standard (schema 3.3.0, [wiki.dcc.ptb.de](https://wiki.dcc.ptb.de))
+in a KOLAS / ISO 17025 context.
+
+What it does today — honest scope:
+
+- **`dcc.parser`** — reads DCC XML: `administrativeData` (core data, items, lab,
+  responsible persons, customer, statements) and `measurementResults` with D-SI
+  values (`si:real`, `si:realListXMLList`, `si:hybrid`) and uncertainty in both
+  the current `measurementUncertaintyUnivariate` form and the legacy
+  `expandedUnc` form. Parsing is verified against an official PTB Good Practice
+  example (bundled as a test fixture with its LGPL-3.0 notice retained).
+- **`dcc.builder`** — turns a MetroAI `GUMResult` + certificate metadata
+  (same `cert_info` keys as the KOLAS PDF exporter) into a schema-3.3.0 DCC
+  **draft**: all schema-required elements, expanded uncertainty as the
+  non-deprecated `expandedMU`, and an optional per-component uncertainty-budget
+  table. Builder output validates against the official 3.3.0 XSD (checked with
+  `xmlschema` in an optional test). Missing inputs become placeholders and are
+  recorded in `DCCBuilder.warnings` — a draft with warnings is not a certificate.
+- **`dcc.units`** — common unit strings → D-SI notation (`"mm"` → `\milli\metre`,
+  `"°C"` → `\degreecelsius`); unmapped units are kept verbatim with a warning.
+- **`metroai/dcc/kolas_map.md`** — mapping table: KOLAS / ISO 17025 §7.8
+  certificate content requirements ↔ DCC 3.3.0 elements, including known gaps.
+
+```python
+from metroai.dcc import export_dcc_xml, parse_dcc
+
+xml = export_dcc_xml(result, {"cert_number": "KOLAS-2026-...", "cal_org": "..."})
+doc = parse_dcc(xml)          # round-trips: values, units, U, k, p survive
+```
+
+**Not implemented yet (roadmap):** XML-DSig signatures (a DCC without a
+signature is only a draft), alignment with the PTB `basic_*`/`gp_*` refType
+vocabulary, multi-item / before-after adjustment results, attachments
+(`byteData`), DCC 3.4 (release candidate as of 2026-07). Optional XSD
+validation needs `pip install -e ".[dcc]"` (installs `xmlschema`).
 
 ---
 
@@ -313,6 +355,8 @@ metroai/
 │   ├── math/                  ← Sobol QMC
 │   ├── ml/                    ← GBT audit-risk model + synthetic data
 │   ├── templates/             ← 9 calibration templates
+│   ├── dcc/                   ← NEW v0.8.x: DCC (digital calibration
+│   │                              certificate) parser/builder — experimental
 │   ├── inverse/               ← NEW v0.8.0: uncertainty-aware ML inverse metrology
 │   │   ├── __init__.py        ←   package: cores + INSTRUMENTS map (11)
 │   │   ├── uncertainty.py     ←   ① unified GUM core
@@ -327,7 +371,7 @@ metroai/
 │   ├── schemas.py             ← Pydantic v2 input validation
 │   ├── exceptions.py          ← MetroAIError hierarchy
 │   └── mcp_server.py          ← MCP stdio server
-├── tests/                     ← 214 unit tests (pytest)
+├── tests/                     ← 243 unit tests (pytest)
 ├── docs/
 │   ├── HONESTY_NOTES.md       ← Citation rules
 │   ├── TRUSTWORTHY_AI.md      ← Trust & governance policy
@@ -383,8 +427,9 @@ pip install -e ".[dev,ml]"
 pytest tests/ -v
 ```
 
-Latest CI on Python 3.10 / 3.11 / 3.12 — **214 passing tests** across
-the v0.5 → v0.7 suites. Inverse modules (`metroai/inverse/`) currently
+Latest CI on Python 3.10 / 3.11 / 3.12 — **243 passing tests** across
+the v0.5 → v0.8 suites (+1 optional DCC XSD-validation test that runs only
+when `xmlschema` and a local copy of the official schema are present). Inverse modules (`metroai/inverse/`) currently
 self-verify via their `__main__` blocks; folding them into the pytest CI suite
 is a P1 roadmap item.
 
